@@ -27,6 +27,14 @@ const char* password = STAPSK;
 boolean isTimeForAChange;
 boolean hotOn;
 boolean fanOn;
+
+boolean fanForcedOn;
+boolean fanForcedOff;
+boolean hotForcedOn;
+boolean hotForcedOff;
+boolean coldForcedOn;
+boolean coldForcedOff;
+
 double temp = 0.00;
 double oldTemp = 0.00;
 double valueRead = 0.00;
@@ -119,14 +127,14 @@ void loop() {
   printH(h);
   
   u8g2.setCursor(0, 40);
-  if (t - temp > 0) {
+  if (coldForcedOn || (!hotForcedOn && !coldForcedOff && t - temp > 0)) {
     setColdOn();
-  } else {
+  } else if (hotForcedOn || (!coldForcedOn && !hotForcedOff && t - temp < 0)) {
     setHotOn();
   }
-  if (t - temp >= 3 || t - temp <= -3 || ((t - temp >= 3 || t - temp <= -1) && h > 65)) {
+  if (fanForcedOn || (t - temp >= 3 || t - temp <= -3 || ((t - temp >= 3 || t - temp <= -1) && h > 65))) {
     setFanOn();
-  } else {
+  } else if (fanForcedOff || (!fanForcedOn && !fanForcedOff)) {
     setFanOff();
   }
 
