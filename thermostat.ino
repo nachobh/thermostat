@@ -132,7 +132,7 @@ void loop() {
   } else if (hotForcedOn || (!coldForcedOn && !hotForcedOff && t - temp < 0)) {
     setHotOn();
   }
-  if (fanForcedOn || (t - temp >= 3 || t - temp <= -3 || ((t - temp >= 3 || t - temp <= -1) && h > 65))) {
+  if (fanForcedOn || ((!fanForcedOn && !fanForcedOff) && (t - temp >= 3 || t - temp <= -3 || ((t - temp >= 3 || t - temp <= -1) && h > 65)))) {
     setFanOn();
   } else if (fanForcedOff || (!fanForcedOn && !fanForcedOff)) {
     setFanOff();
