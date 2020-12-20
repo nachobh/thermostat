@@ -119,7 +119,6 @@ void loop() {
   u8g2B.clearBuffer();
   u8g2B.setCursor(5, 1);
   u8g2B.print(temp);
-  u8g2B.print(" C");
   u8g2B.sendBuffer();
 
   printTemp(temp);
@@ -188,7 +187,7 @@ void u8g2_prepare(void) {
 }
 
 void u8g2B_prepare(void) {
-  u8g2B.setFont(u8g2_font_logisoso54_tf);
+  u8g2B.setFont(u8g2_font_logisoso42_tf);
   u8g2B.setFontRefHeightExtendedText();
   u8g2B.setDrawColor(1);
   u8g2B.setFontPosTop();
