@@ -38,8 +38,6 @@ boolean hotForcedOff;
 boolean coldForcedOn;
 boolean coldForcedOff;
 
-boolean controlOn;
-
 double temp = 0.00;
 double oldTemp = 0.00;
 double valueRead = 0.00;
@@ -112,18 +110,21 @@ void setup() {
 
 void loop() {
 
-  controlOn = digitalRead(CONTROL_PIN);
+  boolean controlOff = digitalRead(CONTROL_PIN);
   Serial.println(digitalRead(CONTROL_PIN));
 
   Serial.println(digitalRead(MENU_PIN));
 
   Serial.println(digitalRead(SELECT_PIN));
 
-  if (!controlOn) {
+  if (controlOff) {
+    
+    u8g2B.clear();
+    u8g2.clear();
     
     u8g2B.clearBuffer();
     u8g2.clearBuffer();
-    
+      
     fanForcedOn = false;
     fanForcedOff = false;
     hotForcedOn = false;
