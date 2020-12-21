@@ -12,8 +12,8 @@
 #define DHTTYPE DHT22
 #define OLED_RESET -1
 #ifndef STASSID
-  #define STASSID "MiFibra-7330"
-  #define STAPSK "nyjLdSoanyjLdSoa"
+#define STASSID "MiFibra-7330"
+#define STAPSK "nyjLdSoanyjLdSoa"
 #endif
 
 const int POT_PIN = A0;
@@ -21,6 +21,9 @@ const int DHTPin = 14;
 const int GREEN_PIN = 12;
 const int RED_PIN = 13;
 const int YELLOW_PIN = 15;
+const int MENU_PIN = 0;
+const int SELECT_PIN = 2;
+const int CONTROL_PIN = 16;
 const char* ssid = STASSID;
 const char* password = STAPSK;
 
@@ -34,6 +37,8 @@ boolean hotForcedOn;
 boolean hotForcedOff;
 boolean coldForcedOn;
 boolean coldForcedOff;
+
+boolean controlOn;
 
 double temp = 0.00;
 double oldTemp = 0.00;
@@ -58,6 +63,12 @@ void setup() {
   pinMode(GREEN_PIN, OUTPUT);
   pinMode(YELLOW_PIN, OUTPUT);
   pinMode(POT_PIN, INPUT);
+  pinMode(MENU_PIN, INPUT);
+  digitalWrite(MENU_PIN, HIGH);
+  pinMode(SELECT_PIN, INPUT);
+  digitalWrite(SELECT_PIN, HIGH);
+  pinMode(CONTROL_PIN, INPUT);
+  digitalWrite(CONTROL_PIN, HIGH);
 
   Serial.begin(9600);
 
@@ -88,14 +99,90 @@ void setup() {
   server.on("/", handleRoot);
   server.onNotFound(handleNotFound);
   server.on("/temp", HTTP_GET, getTemp);
+  server.on("/hot", HTTP_GET, forceHot);
+  server.on("/cold", HTTP_GET, forceCold);
+  server.on("/fan", HTTP_GET, forceFan);
+  server.on("/auto", HTTP_GET, setAuto);
 
   server.begin();
   Serial.println("HTTP server started");
 
   lastChangeTime = rtc.now();
-
 }
 
+void loop() {
+
+  controlOn = digitalRead(CONTROL_PIN);
+  Serial.println(digitalRead(CONTROL_PIN));
+
+  Serial.println(digitalRead(MENU_PIN));
+
+  Serial.println(digitalRead(SELECT_PIN));
+
+  if (!controlOn) {
+    
+    u8g2B.clearBuffer();
+    u8g2.clearBuffer();
+    
+    fanForcedOn = false;
+    fanForcedOff = false;
+    hotForcedOn = false;
+    hotForcedOff = false;
+    coldForcedOn = false;
+    coldForcedOff = false;
+
+    digitalWrite(RED_PIN, LOW);
+    digitalWrite(YELLOW_PIN, LOW);
+    digitalWrite(GREEN_PIN, LOW);    
+    
+  } else {
+
+    isTimeForAChange = rtc.now().unixtime() - lastChangeTime.unixtime() >= 300;
+
+    setTemp();
+
+    delay(500);
+    h = dht.readHumidity();
+    t = dht.readTemperature();
+
+    u8g2B.clearBuffer();
+    u8g2B.setCursor(5, 1);
+    u8g2B.print(temp);
+    u8g2B.sendBuffer();
+
+    printTemp(temp);
+    printT(t);
+    printH(h);
+
+    u8g2.setCursor(0, 40);
+    
+    if (coldForcedOn || (!hotForcedOn && !coldForcedOff && t - temp > 0)) {
+      setColdOn();
+    } else if (hotForcedOn || (!coldForcedOn && !hotForcedOff && t - temp < 0)) {
+      setHotOn();
+    }
+    
+    if (fanForcedOn || ((!fanForcedOn && !fanForcedOff) && (t - temp >= 3 || t - temp <= -3 || ((t - temp >= 3 || t - temp <= -1) && h > 65)))) {
+      setFanOn();
+    } else if (fanForcedOff || (!fanForcedOn && !fanForcedOff)) {
+      setFanOff();
+    }
+
+    printDate();
+
+    u8g2.sendBuffer();
+
+    if (isnan(h) || isnan(t)) {
+      Serial.println("Failed to read from DHT sensor!");
+      return;
+    }
+
+    server.handleClient();
+    MDNS.update();
+    
+  }
+
+}
 
 void getTemp()
 {
@@ -105,50 +192,54 @@ void getTemp()
   server.send(200, "text/plain", String("Temperatura cambiada a " + String(temp)));
 }
 
-void loop() {
-
-  isTimeForAChange = rtc.now().unixtime() - lastChangeTime.unixtime() >= 300;
-  
-  setTemp();
-
-  delay(500);
-  h = dht.readHumidity();
-  t = dht.readTemperature();
-
-
-  u8g2B.clearBuffer();
-  u8g2B.setCursor(5, 1);
-  u8g2B.print(temp);
-  u8g2B.sendBuffer();
-
-  printTemp(temp);
-  printT(t);
-  printH(h);
-  
-  u8g2.setCursor(0, 40);
-  if (coldForcedOn || (!hotForcedOn && !coldForcedOff && t - temp > 0)) {
-    setColdOn();
-  } else if (hotForcedOn || (!coldForcedOn && !hotForcedOff && t - temp < 0)) {
+void forceHot()
+{
+  hotForcedOn = server.arg(String("hot")).equals("true");
+  if (hotForcedOn) {
     setHotOn();
+  } else {
+    hotForcedOff = !hotForcedOn;
+    setHotOff();
   }
-  if (fanForcedOn || ((!fanForcedOn && !fanForcedOff) && (t - temp >= 3 || t - temp <= -3 || ((t - temp >= 3 || t - temp <= -1) && h > 65)))) {
+  server.send(200, "text/plain", String("Calor establecido a " + String(hotForcedOn)));
+}
+
+void forceCold()
+{
+  coldForcedOn = server.arg(String("cold")).equals("true");
+  if (coldForcedOn) {
+    setColdOn();
+  } else {
+    coldForcedOff = !coldForcedOn;
+    setColdOff();
+  }
+  server.send(200, "text/plain", String("Frío establecido a " + String(coldForcedOn)));
+}
+
+void forceFan()
+{
+  fanForcedOn = server.arg(String("fan")).equals("true");
+  if (fanForcedOn) {
     setFanOn();
-  } else if (fanForcedOff || (!fanForcedOn && !fanForcedOff)) {
+  } else {
+    fanForcedOff = !fanForcedOn;
     setFanOff();
   }
+  server.send(200, "text/plain", String("Ventilador establecido a " + String(fanForcedOn)));
+}
 
-  printDate();
-
-  u8g2.sendBuffer();
-
-  if (isnan(h) || isnan(t)) {
-    Serial.println("Failed to read from DHT sensor!");
-    return;
+void setAuto()
+{
+  boolean autoMode = server.arg(String("auto")).equals("true");
+  if (autoMode) {
+    fanForcedOn = false;
+    fanForcedOff = false;
+    hotForcedOn = false;
+    hotForcedOff = false;
+    coldForcedOn = false;
+    coldForcedOff = false;
+    server.send(200, "text/plain", String("Establecido modo auto"));
   }
-
-  server.handleClient();
-  MDNS.update();
-
 }
 
 void startScreenA(void) {
@@ -234,7 +325,7 @@ void printH(double h) {
 
 void setColdOn(void) {
   if (isTimeForAChange) {
-    lastChangeTime = rtc.now();  
+    lastChangeTime = rtc.now();
     digitalWrite(RED_PIN, HIGH);
     digitalWrite(YELLOW_PIN, LOW);
     digitalWrite(GREEN_PIN, LOW);
@@ -247,29 +338,18 @@ void setColdOn(void) {
   }
 }
 
-void setFanOn(void) {
+void setColdOff(void) {
   if (isTimeForAChange) {
     lastChangeTime = rtc.now();
-    digitalWrite(GREEN_PIN, HIGH);
-    u8g2.print(" - FAN ON");
-    fanOn = true;
-  } else if (!fanOn) {
-    u8g2.print("- FAN STARTING");
-  } else {
-    u8g2.print(" - FAN ON");    
-  }
-}
-
-void setFanOff(void) {
-  if (isTimeForAChange) {
-    lastChangeTime = rtc.now();
+    digitalWrite(RED_PIN, LOW);
+    digitalWrite(YELLOW_PIN, LOW);
     digitalWrite(GREEN_PIN, LOW);
-    u8g2.print(" - FAN OFF");
-    fanOn = false;
-  } else if (fanOn) {
-    u8g2.print("- FAN STOPPING");
+    u8g2.print("COLD OFF");
+    hotOn = false;
+  } else if (hotOn) {
+    u8g2.print("COLD STOPPING");
   } else {
-    u8g2.print(" - FAN OFF");    
+    u8g2.print("COLD OFF");
   }
 }
 
@@ -285,6 +365,47 @@ void setHotOn(void) {
     u8g2.print("HOT STARTING");
   } else {
     u8g2.print("HOT ON");
+  }
+}
+
+void setHotOff(void) {
+  if (isTimeForAChange) {
+    lastChangeTime = rtc.now();
+    digitalWrite(RED_PIN, LOW);
+    digitalWrite(YELLOW_PIN, LOW);
+    digitalWrite(GREEN_PIN, LOW);
+    u8g2.print("HOT OFF");
+    hotOn = false;
+  } else if (hotOn) {
+    u8g2.print("HOT STOPPING");
+  } else {
+    u8g2.print("HOT OFF");
+  }
+}
+
+void setFanOn(void) {
+  if (isTimeForAChange) {
+    lastChangeTime = rtc.now();
+    digitalWrite(GREEN_PIN, HIGH);
+    u8g2.print(" - FAN ON");
+    fanOn = true;
+  } else if (!fanOn) {
+    u8g2.print("- FAN STARTING");
+  } else {
+    u8g2.print(" - FAN ON");
+  }
+}
+
+void setFanOff(void) {
+  if (isTimeForAChange) {
+    lastChangeTime = rtc.now();
+    digitalWrite(GREEN_PIN, LOW);
+    u8g2.print(" - FAN OFF");
+    fanOn = false;
+  } else if (fanOn) {
+    u8g2.print("- FAN STOPPING");
+  } else {
+    u8g2.print(" - FAN OFF");
   }
 }
 
