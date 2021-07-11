@@ -12,8 +12,8 @@
 #define DHTTYPE DHT22
 #define OLED_RESET -1
 #ifndef STASSID
-#define STASSID "MiFibra-7330"
-#define STAPSK "nyjLdSoanyjLdSoa"
+#define STASSID "xxxxxxxxxxxxx"
+#define STAPSK "xxxxxxxxxxxxx"
 #endif
 
 const int POT_PIN = A0;
