@@ -1,3 +1,7 @@
+// Termostato ESP8266 - ver ANALISIS_PCB_THERMOSTAT.md para el plan de PCB.
+// Los 3 SSR se manejan via driver NPN (BC547/2N2222) con 1k en base y
+// pull-down 10k base-GND => LOW firme al boot, seguro en GPIO15 (D8).
+// Pines originales SIN cambios.
 #include <Arduino.h>
 #include <DHT.h>
 #include <ESP8266WiFi.h>
@@ -17,12 +21,14 @@
 #endif
 
 const int POT_PIN = A0;
-const int DHTPin = 14;
-const int GREEN_PIN = 12;
-const int RED_PIN = 13;
-const int YELLOW_PIN = 15;
-const int MENU_PIN = 0;
-const int SELECT_PIN = 2;
+// Pines originales SIN cambios. Seguridad boot: los 3 SSR se manejan via driver NPN
+// con pull-down 10k en la base => LOW firme al arrancar, incluso GPIO15 (D8).
+const int DHTPin = 14;     // D5 (GPIO14)
+const int GREEN_PIN = 12;  // D6 (GPIO12) - SSR VENTILADOR (SSR3)
+const int RED_PIN = 13;    // D7 (GPIO13) - SSR FRIO (SSR1)
+const int YELLOW_PIN = 15; // D8 (GPIO15) - SSR CALOR (SSR2) - protegido por pull-down 10k
+const int MENU_PIN = 0;    // D3 (GPIO0)
+const int SELECT_PIN = 2;  // D4 (GPIO2)
 const int CONTROL_PIN = 16;
 const char* ssid = STASSID;
 const char* password = STAPSK;
@@ -43,6 +49,7 @@ double oldTemp = 0.00;
 double valueRead = 0.00;
 double t;
 double h;
+boolean controlOff = true;
 int yyyy, MM, dd, hh, mm, ss;
 
 DateTime rightNow;
@@ -110,8 +117,8 @@ void setup() {
 
 void loop() {
 
-  boolean controlOff = digitalRead(CONTROL_PIN);
   Serial.println(digitalRead(CONTROL_PIN));
+  controlOff = digitalRead(CONTROL_PIN);
 
   Serial.println(digitalRead(MENU_PIN));
 
@@ -134,7 +141,7 @@ void loop() {
 
     digitalWrite(RED_PIN, LOW);
     digitalWrite(YELLOW_PIN, LOW);
-    digitalWrite(GREEN_PIN, LOW);    
+    digitalWrite(GREEN_PIN, LOW);
     
   } else {
 
@@ -145,6 +152,14 @@ void loop() {
     delay(500);
     h = dht.readHumidity();
     t = dht.readTemperature();
+
+    if (isnan(h) || isnan(t)) {
+      // Sensor caido: no ejecutar logica de control, pero atender el servidor web SIEMPRE.
+      Serial.println("Failed to read from DHT sensor!");
+      server.handleClient();
+      MDNS.update();
+      return;
+    }
 
     u8g2B.clearBuffer();
     u8g2B.setCursor(5, 1);
@@ -163,7 +178,7 @@ void loop() {
       setHotOn();
     }
     
-    if (fanForcedOn || ((!fanForcedOn && !fanForcedOff) && (t - temp >= 3 || t - temp <= -3 || ((t - temp >= 3 || t - temp <= -1) && h > 65)))) {
+    if (fanForcedOn || (!fanForcedOff && (t - temp >= 3 || t - temp <= -3 || (t - temp <= -1 && h > 65)))) {
       setFanOn();
     } else if (fanForcedOff || (!fanForcedOn && !fanForcedOff)) {
       setFanOff();
@@ -172,11 +187,6 @@ void loop() {
     printDate();
 
     u8g2.sendBuffer();
-
-    if (isnan(h) || isnan(t)) {
-      Serial.println("Failed to read from DHT sensor!");
-      return;
-    }
 
     server.handleClient();
     MDNS.update();
