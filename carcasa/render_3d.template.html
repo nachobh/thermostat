@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Termostato – render 3D</title>
+<style>
+  html,body{margin:0;height:100%;background:#eef1f5;font-family:system-ui,sans-serif;color:#222}
+  #ui{position:fixed;top:10px;left:10px;display:flex;flex-wrap:wrap;gap:6px;max-width:calc(100% - 20px);z-index:2}
+  #ui button{border:1px solid #9aa;background:#fff;border-radius:6px;padding:6px 10px;font-size:13px;cursor:pointer}
+  #ui button.on{background:#1f5fbf;color:#fff;border-color:#1f5fbf}
+  #info{position:fixed;bottom:10px;left:10px;background:#fffd;border-radius:6px;padding:8px 12px;font-size:12px;line-height:1.5;z-index:2}
+  canvas{display:block}
+</style>
+</head>
+<body>
+<div id="ui"></div>
+<div id="info"></div>
+<script src="three.min.js"></script>
+<script src="OrbitControls.js"></script>
+<script>
+window.onerror=(m,u,l)=>{document.body.insertAdjacentHTML('beforeend','<pre style="position:fixed;top:40px;left:10px;color:#b00;z-index:9;background:#fff">'+m+' @'+l+'</pre>')};
+const SCENE = __SCENE__;
+const P = SCENE.P, F = SCENE.FRONT;
+const q = new URLSearchParams(location.hash.slice(1));
+const state = {
+  case: q.get('case') || 'solid',      // solid | glass | off
+  view: q.get('view') || 'iso',        // iso | front | side | back
+  explode: parseFloat(q.get('explode') || '0'),
+  ui: q.get('ui') !== '0'
+};
+
+const renderer = new THREE.WebGLRenderer({antialias:true, preserveDrawingBuffer:true});
+renderer.setPixelRatio(1);
+renderer.setSize(innerWidth, innerHeight);
+renderer.setClearColor(0xeef1f5);
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(32, innerWidth/innerHeight, 1, 2000);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8899aa, 0.55));
+const sun = new THREE.DirectionalLight(0xffffff, 0.55); sun.position.set(120, 180, 260); scene.add(sun);
+const fill = new THREE.DirectionalLight(0xffffff, 0.3); fill.position.set(-200, -80, 120); scene.add(fill);
+
+const M = (c, o={}) => new THREE.MeshStandardMaterial(Object.assign({color:c, roughness:0.6, metalness:0.05}, o));
+function box(w, h, d, mat, x, y, z, parent){           // x,y,z = centro; z hacia fuera de la pared
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); parent.add(m); return m;
+}
+function cyl(r, len, mat, x, y, z, axis, parent, seg=32){
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, seg), mat);
+  if (axis === 'z') m.rotation.x = Math.PI/2; else if (axis === 'x') m.rotation.z = Math.PI/2;
+  m.position.set(x, y, z); parent.add(m); return m;
+}
+
+const gShell = new THREE.Group(), gPCB = new THREE.Group(), gLid = new THREE.Group(), gMods = new THREE.Group();
+scene.add(gShell, gPCB, gLid, gMods);
+
+/* ---------- PCB y componentes (centro de la PCB en x,y = 0) ---------- */
+const zb = P.pcb_z;                         // cara inferior PCB
+const zt = zb + P.pcb_t;                    // cara superior
+box(P.pcb, P.pcb, P.pcb_t, M(0x1f6b3a, {roughness:0.45}), 0, 0, zb + P.pcb_t/2, gPCB);
+[-1,1].forEach(sx => [-1,1].forEach(sy => {   // agujeros: discos del color de fondo
+  const h = P.pcb/2 - P.hole_off;
+  cyl(P.hole_d/2, P.pcb_t+0.1, M(0xcfd5dc), sx*h, sy*h, zb + P.pcb_t/2, 'z', gPCB, 20);
+}));
+const cx0 = P.pcb/2;
+SCENE.parts.forEach(p => {
+  const x = p.x - cx0, y = p.y - cx0;
+  if (p.t === 'jst') {
+    const w = (p.n-1)*2.5 + 4.9;
+    box(w, 5.75, 7, M(0xf2ecd9), x, y, zt + 3.5, gPCB);
+    box(w-1.6, 3.2, 0.3, M(0x3a3a3a), x, y, zt + 7.05, gPCB);
+  } else if (p.t === 'phoenix') {
+    box(10.16, 9.8, 10.5, M(0x2f9a52), x, y, zt + 5.25, gPCB);
+    box(0.4, 7, 5, M(0x151515), x + 5.0, y, zt + 4.5, gPCB);       // entrada de cable (lado por confirmar)
+    cyl(1.9, 0.6, M(0xb9bec4,{metalness:0.8}), x - 2.54, y, zt + 10.6, 'z', gPCB, 20);
+    cyl(1.9, 0.6, M(0xb9bec4,{metalness:0.8}), x + 2.54, y, zt + 10.6, 'z', gPCB, 20);
+  } else if (p.t === 'res') {
+    cyl(1.15, 6.3, M(0xd9b97a), x, y, zt + 1.4, 'x', gPCB, 16);
+    box(8.0, 0.5, 0.5, M(0xb8b8b8,{metalness:0.8}), x, y, zt + 1.4, gPCB);
+  } else if (p.t === 'elec') {
+    cyl(2.5, 11, M(0x1b1b1b), x, y, zt + 5.5, 'z', gPCB, 24);
+    cyl(2.45, 0.1, M(0xb0b0b0,{metalness:0.7}), x, y, zt + 11.05, 'z', gPCB, 24);
+  } else if (p.t === 'cer') {
+    box(5, 2.5, 6, M(0xe0a020), x, y, zt + 3, gPCB);
+  } else if (p.t === 'to92') {
+    cyl(2.4, 5, M(0x1a1a1a), x, y, zt + 3.5, 'z', gPCB, 20);
+  } else if (p.t === 'ptc') {
+    box(7.4, 3.8, 9, M(0xe8d34a), x, y, zt + 4.5, gPCB);
+  }
+});
+
+/* ---------- caja ---------- */
+const COL0 = /^[0-9a-fA-F]{6}$/.test(q.get('color')||'') ? '#'+q.get('color') : '#b4bbc7';
+let curColor = COL0;
+const sh = M(COL0, {roughness:0.55}), shGlass = M(COL0, {transparent:true, opacity:0.28, depthWrite:false});
+let lidMat1 = null;
+const shellMat = state.case === 'glass' ? shGlass : sh;
+const half = P.inner/2, W = P.wall, depth = P.lid_in;
+box(P.outer, P.outer, P.floor, shellMat, 0, 0, P.floor/2, gShell);                     // suelo
+box(P.outer, W, depth, shellMat, 0,  half + W/2, depth/2, gShell);                     // arriba
+box(P.outer, W, depth, shellMat, 0, -half - W/2, depth/2, gShell);                     // abajo
+box(W, P.inner, depth, shellMat,  half + W/2, 0, depth/2, gShell);                     // derecha
+// pared izquierda con abertura USB (12 × 8 mm) a la altura del NodeMCU
+const ny = F.node[1], hw = 6, hh = 8, lx = -half - W/2;
+box(W, P.inner, depth - hh, shellMat, lx, 0, (depth - hh)/2, gShell);
+box(W, (ny - hw) + half, hh, shellMat, lx, (-half + (ny - hw))/2, depth - hh/2, gShell);
+box(W, half - (ny + hw), hh, shellMat, lx, ((ny + hw) + half)/2, depth - hh/2, gShell);
+[-1,1].forEach(sx => [-1,1].forEach(sy => {                                            // separadores M3
+  const h = P.pcb/2 - P.hole_off;
+  cyl(3.0, P.standoff, M(0xe0b050), sx*h, sy*h, P.floor + P.standoff/2, 'z', gShell, 24);
+  cyl(1.4, P.standoff + P.pcb_t + 3, M(0x888,{metalness:0.8}), sx*h, sy*h, P.floor + (P.standoff + P.pcb_t + 3)/2, 'z', gShell, 12);
+}));
+
+/* tapa con ventanas OLED y taladro del potenciómetro */
+const lidShape = new THREE.Shape();
+const L2 = P.outer/2;
+lidShape.moveTo(-L2,-L2); lidShape.lineTo(L2,-L2); lidShape.lineTo(L2,L2); lidShape.lineTo(-L2,L2); lidShape.closePath();
+['oled1','oled2'].forEach(k => {
+  const cx = F[k][0], cy = F[k][1] + 3.0, w = P.win_w/2, h = P.win_h/2;
+  const hole = new THREE.Path(); hole.moveTo(cx-w, cy-h); hole.lineTo(cx-w, cy+h); hole.lineTo(cx+w, cy+h); hole.lineTo(cx+w, cy-h); hole.closePath();
+  lidShape.holes.push(hole);
+});
+const potHole = new THREE.Path(); potHole.absarc(F.pot[0], F.pot[1], P.pot_hole/2, 0, Math.PI*2, true); lidShape.holes.push(potHole);
+const lidMesh = new THREE.Mesh(new THREE.ExtrudeGeometry(lidShape, {depth:P.lid, bevelEnabled:false}), state.case === 'glass' ? shGlass : (lidMat1 = M(COL0,{roughness:0.5})));
+lidMesh.position.z = P.lid_in; gLid.add(lidMesh);
+
+/* ---------- módulos montados en la tapa ---------- */
+const zl = P.lid_in;
+function oledTexture(txt1, txt2){
+  const c = document.createElement('canvas'); c.width = 256; c.height = 128; const g = c.getContext('2d');
+  g.fillStyle = '#04070b'; g.fillRect(0,0,256,128);
+  g.fillStyle = '#9fe8ff'; g.font = 'bold 56px monospace'; g.fillText(txt1, 14, 62);
+  g.font = '28px monospace'; g.fillText(txt2, 14, 108);
+  return new THREE.CanvasTexture(c);
+}
+[['oled1','22.5°C','HEAT  AUTO'],['oled2','45 %RH','WiFi OK']].forEach(([k,a,b]) => {
+  const [x,y] = F[k];
+  box(P.oled_w, P.oled_h, 1.2, M(0x151a30), x, y, zl - 4 + 0.6, gMods);                        // PCB módulo
+  box(26.7, 19.3, 1.4, M(0x0a0a0a), x, y + 3.0, zl - 2.8 + 0.7, gMods);                        // cristal
+  const act = new THREE.Mesh(new THREE.PlaneGeometry(21.74, 10.86), new THREE.MeshBasicMaterial({map:oledTexture(a,b)}));
+  act.position.set(x, y + 3.0, zl - 1.4 + 0.02); gMods.add(act);
+  box(10.2, 2.5, 8, M(0x222222), x, y - 12.5, zl - 4 - 4, gMods);                               // regleta 4 pines
+});
+// NodeMCU (cara de componentes hacia la tapa, pines hacia atrás)
+{
+  const [x,y] = F.node, zBoard = zl - 3.0 - 0.8;
+  box(P.node_l, P.node_w, 1.6, M(0x1b2f78, {roughness:0.4}), x, y, zBoard, gMods);
+  box(16, 12, 3, M(0xc8ccd2,{metalness:0.8,roughness:0.3}), x + 6, y, zBoard + 0.8 + 1.5, gMods);   // ESP-12
+  box(11, 11, 0.4, M(0xd9b24a), x + 21, y, zBoard + 0.8 + 0.2, gMods);                              // antena
+  box(8, 6, 2.8, M(0xb9bec4,{metalness:0.85,roughness:0.3}), x - 25, y, zBoard + 0.8 + 1.4, gMods);  // micro-USB
+  box(5, 4, 1.2, M(0x111111), x - 11, y + 4, zBoard + 0.8 + 0.6, gMods);                             // CH340
+  [-1,1].forEach(s => box(38.1, 2.5, 8.4, M(0x151515), x - 2, y + s*11.43, zBoard - 0.8 - 4.2, gMods)); // regletas 2×15
+}
+// potenciómetro de panel
+{
+  const [x,y] = F.pot;
+  cyl(P.pot_body/2, P.pot_len, M(0x8a8f96,{metalness:0.4}), x, y, zl - P.pot_len/2, 'z', gMods, 32);
+  cyl(P.pot_hole/2 - 0.1, P.lid + 3, M(0xb9bec4,{metalness:0.85}), x, y, zl + (P.lid+3)/2 - 0.5, 'z', gMods, 24);
+  cyl(3, P.lid + P.knob_h, M(0xc0c4ca,{metalness:0.85}), x, y, zl + (P.lid + P.knob_h)/2 - 0.5, 'z', gMods, 20);
+  cyl(P.knob_d/2, P.knob_h - 1, M(0x2b2f36,{roughness:0.5}), x, y, zl + P.lid + 1 + (P.knob_h-1)/2, 'z', gMods, 48);
+  box(1.2, P.knob_d/2 - 3, 0.4, M(0xffffff), x, y + (P.knob_d/2)/2 + 1, zl + P.lid + P.knob_h + 0.1, gMods);
+}
+
+/* ---------- visibilidad / despiece ---------- */
+const e = state.explode;
+gShell.visible = state.case !== 'off';
+gLid.visible   = state.case !== 'off';
+gPCB.position.z  = e * 20;
+gMods.position.z = e * 60; gLid.position.z = e * 60;
+if (e) gShell.position.z = -e * 10;
+
+/* ---------- cámara ---------- */
+const mid = (P.depth + P.knob_h)/2;
+const views = {
+  iso:   [150, 105, 210, 0, 0, mid-6],
+  front: [0, 0, 420, 0, 0, mid],
+  side:  [420, 0, mid, 0, 0, mid],
+  back:  [-120, 80, -260, 0, 0, mid]
+};
+function setView(v){
+  const a = views[v] || views.iso;
+  const k = (v === 'iso' && e) ? 1.5 : 1; camera.position.set(a[0]*k, a[1]*k, a[5] + (a[2]-a[5])*k); camera.up.set(0, 1, 0);
+  controls.target.set(a[3], a[4], a[5]); controls.update();
+}
+function renderLoop(){ requestAnimationFrame(renderLoop); renderer.render(scene, camera); }
+addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix(); });
+setView(state.view); renderer.render(scene, camera); renderLoop();
+
+/* ---------- UI ---------- */
+function applyColor(c){ sh.color.set(c); shGlass.color.set(c); if(lidMat1) lidMat1.color.set(c); }
+function apply(next){ const h = new URLSearchParams({case:state.case, view:state.view, explode:state.explode, color:curColor.slice(1), ...next}); location.hash = h.toString(); location.reload(); }
+if (state.ui) {
+  const ui = document.getElementById('ui');
+  const btn = (label, on, f) => { const b = document.createElement('button'); b.textContent = label; if (on) b.className = 'on'; b.onclick = f; ui.appendChild(b); };
+  btn('Con carcasa', state.case==='solid', () => apply({case:'solid'}));
+  btn('Carcasa transparente', state.case==='glass', () => apply({case:'glass'}));
+  btn('Sin carcasa', state.case==='off', () => apply({case:'off'}));
+  btn('Despiece', state.explode>0, () => apply({explode: state.explode>0 ? 0 : 1}));
+  ['iso','front','side','back'].forEach(v => btn({iso:'Isométrica',front:'Frontal',side:'Lateral',back:'Trasera'}[v], state.view===v, () => apply({view:v})));
+
+  { const box=document.createElement('div'); box.style.cssText='display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #9aa;border-radius:6px;padding:4px 10px;font-size:13px';
+    const inp=document.createElement('input'); inp.type='color'; inp.title='Color de la carcasa';
+    const sl=['R','G','B'].map(n=>{const r=document.createElement('input'); r.type='range'; r.min=0; r.max=255; r.style.width='64px'; r.title=n; return r;});
+    const hex=(r,g,b)=>'#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
+    function setCol(c){ curColor=c; applyColor(c); inp.value=c; const n=parseInt(c.slice(1),16); sl[0].value=(n>>16)&255; sl[1].value=(n>>8)&255; sl[2].value=n&255;
+      try{ history.replaceState(null,'','#'+new URLSearchParams({case:state.case,view:state.view,explode:state.explode,color:c.slice(1)}).toString()); }catch(e){} }
+    inp.oninput=()=>setCol(inp.value); sl.forEach(r=>r.oninput=()=>setCol(hex(+sl[0].value,+sl[1].value,+sl[2].value)));
+    box.append('Color carcasa ',inp,' R',sl[0],' G',sl[1],' B',sl[2]); ui.appendChild(box); setCol(curColor); }
+}
+document.getElementById('info').innerHTML =
+  `<b>Caja ${P.outer}×${P.outer}×${P.depth.toFixed(1)} mm</b> (+${P.knob_h} del mando) · PCB 100×100 sobre separadores de ${P.standoff} mm<br>` +
+  `NodeMCU, OLED y potenciómetro con medidas supuestas · arrastra para girar, rueda para zoom`;
+if (q.get('snap') === '1') { const im = new Image(); im.style.cssText = 'position:fixed;inset:0;width:100%;height:100%'; im.src = renderer.domElement.toDataURL('image/png'); document.body.appendChild(im); }
+if (!state.ui) document.getElementById('info').style.display = 'none';
+</script>
+</body>
+</html>

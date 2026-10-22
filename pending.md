@@ -1,83 +1,60 @@
-# Termostato — Pendientes y decisiones abiertas
+# Pendientes y decisiones
 
-Actualizado: 2026-09-10. Compañero de `ANALISIS_PCB_THERMOSTAT.md` y `checklist.md`.
+Actualizado: 2026-10-01.
 
-## A. Bloqueantes antes de fabricar la PCB
+## Bloqueantes antes de pedir la PCB
 
-1. **Decidir SSR según carga real del AC.** RESUELTO 2026-09-10: carga declarada
-   6 A inductivo / 3,5 A resistivo → **3× SSR-25DA zero-cross + disipador
-   ~1–2 °C/W obligatorio** (~8,4 W disipados por SSR a 6 A). Ver
-   `PIEZAS_Y_PEDIDO_PCBWAY.md` §1. Queda pendiente medir el pico de arranque
-   real con pinza al montar (checklist §5).
-2. **Actualizar la parte RTC del `sketch_pcb.fzz` de DS1307 a DS3231.** El código usa
-   `RTC_DS3231`; el .fzz todavía instancia `Real_Time_Clock_Module___DS1307` (problema P2).
-   Mismo footprint, pero la parte de Fritzing debe coincidir con lo que se compre.
-3. **Fusible + MOV + bornas AC no están en el .fzz.** El BOM (§4) los pide pero la
-   corrección §7 no los añadió. Hay que añadirlos al esquema antes del layout, o
-   documentar explícitamente que la parte AC se cablea fuera de la PCB (borneta
-   externa). No dejarlo ambiguo.
-4. **Verificación manual en Fritzing.** La edición del .fzz fue programática: el netlist
-   está verificado por script, pero las posiciones visuales de las partes nuevas
-   (NPN, R, C) pueden requerir arrastre antes de exportar a PCB.
+1. Presentar a escala 1:1 JST-XH, MKDS, PTC, BC547B y pasivas reales. NodeMCU,
+   OLED, RTC, DHT, potenciómetro y mandos son externos.
+2. Confirmar que la caja admite PCB 100 × 100 mm y centros de tornillo 90 ×
+   90 mm. La Rev A ya tiene cuatro taladros NPTH Ø3,0 mm; probar la tornillería
+   elegida en una impresión 1:1 y prever altura/cables.
+3. Realizar revisión independiente del pinout y Gerbers de
+   `thermostat_universal.fzz`; `sketch_pcb.fzz` es histórico.
+4. Subir el ZIP al visor/DFM de PCBWay y verificar capas, taladros y tamaño.
 
-## B. Seguridad (no bloqueante pero importante)
+## Bloqueantes antes de poner en servicio
 
-5. **Credenciales WiFi fuera del repo (P5).** `STASSID`/`STAPSK` están en claro en
-   `thermostat.ino` y el .ino está trackeado en git. Crear `Secrets.h` en
-   `.gitignore` + `Secrets.h.example`, y ROTAR la contraseña del router si el repo
-   llegó a ser público (revisar `git remote -v` y visibilidad).
-6. **Boot GPIO15 depende 100% del hardware.** Con el pull-down 10k en la base del NPN
-   el pin arranca LOW correcto. PERO: si alguien prueba el SSR conectado DIRECTO al
-   GPIO (sin driver), el arranque puede bloquearse. Dejarlo así es aceptable porque
-   la PCB siempre lleva el driver; documentar en el README para el futuro.
-7. **Sin autenticación en el servidor web.** `/hot?hot=true` conmuta carga de 220 V
-   desde cualquier dispositivo de la LAN. Para uso doméstico puede ser aceptable;
-   mínimo no exponer el puerto 80 a internet (no port-forward, no UPnP).
+- Confirmar OLED 0x3C/0x3D, pull-ups I²C y rango A0 del NodeMCU real; hacer
+  pruebas de banco a 5 V con la PCB poblada.
+- Medir corriente de marcha y pico de arranque de calefacción, ventilador y
+  compresor. El 6(3,5) A del Eberle es rating del contacto, no medición de carga.
+- Validar térmicamente los tres SSR externos y cerrar fusible/disipadores.
 
-## C. Decisiones de diseño abiertas
+## Decisiones ya tomadas
 
-8. **Interruptor OFF: ¿corta solo lógica o también SSR?** Ahora (rama `controlOff`)
-   corta todo local Y remoto, pero los SSR quedan alimentados en AC. Opciones:
-   a) Mantener como está (corte total de comportamiento, SSR en standby).
-   b) Que el interruptor corte la línea L de los SSR (seguridad total de mantenimiento).
-   Implica cambios en el layout AC. Decidir antes de rutear.
-9. **`lastChangeTime` común para los 3 canales.** DECIDIDO 2026-09-10: se MANTIENE
-   el límite actual de 1 cambio / 300 s tal cual (verificado con visión que el
-   termostato original Eberle admite 4.000 ciclos/h — vamos 300× por debajo).
-   No hace falta independencia por canal.
-10. **Rango del setpoint por web sin validar.** `/temp?temp=999` se acepta tal cual.
-    Añadir clamp en `getTemp()` (p. ej. 15–30 °C). Cambio de 2 líneas.
+- Cableado fotografiado: 1/3/4/5/7; 0/2/6 sin usar.
+- PCB sólo SELV; SSR-40DA, fusible/TMOV y 240 V fuera de ella.
+- Alimentación con cargador USB aislado 5 V/1 A; no añadir AC/DC a la placa.
+- Tres canales externos universales `+5V/CTRL-`.
+- GPIO15 se mantiene en calefacción con BC547B y pull-down 10 kΩ.
+- Endpoint antiguo y alias descriptivo conviven; activar exige confirmación.
+- Credenciales WiFi en `Secrets.h`, no en el repositorio.
+- El interruptor lógico cierra GPIO16/D0 a 3V3 para habilitar; abierto queda OFF
+  por R15 pull-down y `INPUT_PULLDOWN_16`. No es seccionador de red.
 
-## D. Limpieza de código (bajo riesgo, cuando se toque el .ino)
+## Firmware pendiente
 
-11. Los pines `MENU_PIN`/`SELECT_PIN` se leen por serial pero no tienen lógica de menú
-    asociada — los botones están cableados en el .fzz pero el firmware no los usa.
-    Decidir: implementar menú local o quitarlos del BOM/.fzz.
-12. `u8g2` y `u8g2B` usan el MISMO par de pines SDA/SCL (soft I2C) con direcciones
-    0x7A/0x78 — funciona, pero podría migrarse a `U8G2_SSD1306_128X64_NONAME_F_HW_I2C`
-    para liberar CPU. Opcional.
-13. `printT()` imprime `" %\t"` suelto en el log (sobra).
-14. `CONTROL_PIN` (GPIO16) no es pin de interrupción profunda ni tiene pull-down
-    interno — el `digitalWrite(CONTROL_PIN, HIGH)` activa la pull-up interna,
-    correcto para el toggle actual, pero el interruptor debe cerrar a GND.
-    Verificar que el interruptor comprado cierra contra GND, no contra 3V3.
+- Compilación realizada con core ESP8266 3.1.2 y librerías DHT 1.4.7,
+  RTClib 2.1.4 y U8g2 2.36.19; falta flashear y probar hardware.
+- Probar el comportamiento real del límite de 300 s y decidir, tras el banco, si
+  debe aplicarse sólo al rearranque del compresor. El apagado por sensor u OFF
+  físico ya es inmediato.
+- Los botones MENU/SELECT todavía no implementan un menú.
+- El servidor web no tiene autenticación: mantenerlo sólo en la LAN.
 
-## E. Repo / git
+## Piezas del prototipo ya disponibles
 
-15. `thermostat.ino` modificado SIN commitear (último commit `e326b9c`).
-16. Sin trackear: `ANALISIS_PCB_THERMOSTAT.md`, `sketch_pcb.fzz`, `pending.md`,
-    `checklist.md`, fotos de WhatsApp. Decidir si las fotos van al repo (pesan
-    ~2.7 MB en total) o se guardan aparte.
-17. `thermostat_report.md` (informe GPT) sin trackear también — conviene
-    commitearlo como referencia histórica junto al análisis.
+- El B10K sirve para A0 igual que un B100K porque ambos proporcionan el recorrido
+  completo del divisor; B10K presenta además menor impedancia de fuente.
+- El DHT11 comparte patillaje/protocolo con el DHT22, pero **no** es un cambio de
+  firmware transparente: para montarlo hay que definir `DHTTYPE DHT11`. Su menor
+  precisión hace especialmente útil la media y el filtro, aunque no sustituye la
+  prueba de fallo.
 
-## F. Verificado OK (no repetir)
+## Repositorio
 
-- Netlist de `sketch_pcb.fzz` verificado por script: 3× canal NPN (GPIO→1k→base,
-  colector→SSR+, emisor→GND, 10k base-GND, 100nF en entrada SSR), pull-ups I2C
-  4.7k, desacoplos, DHT22→D5, TOGGLE→D0, botones→D3/D4, POT→A0. Coincide con el
-  código y con §5 del análisis.
-- Fix P3 (NaN DHT no mata el server) aplicado en el .ino.
-- Fix P8 (condición ventilador simplificada) aplicado en el .ino.
-- Tabla §2 del análisis corregida el 2026-09-10: ROJO=frío=D7, AMARILLO=calor=D8,
-  VERDE=ventilador=D6 (coherente ya con §5 y con el código).
+- La contraseña que aparecía en `thermostat.ino` era antigua/caducada; se ha
+  retirado igualmente del árbol actual. Si alguna vez se publica el historial,
+  asumir que seguirá recuperable en commits anteriores.
+- Decidir si las fotos de WhatsApp forman parte del repositorio definitivo.

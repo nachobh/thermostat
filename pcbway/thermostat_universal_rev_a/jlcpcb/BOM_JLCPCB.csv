@@ -1,0 +1,12 @@
+Comment,Designator,Footprint,LCSC Part #
+"B3B-XH-A(LF)(SN) JST XH 3P header, 2.50mm, vertical, no boss","J1,J8,J9",JST_XH_B3B-XH-A_1x03_P2.50mm_Vertical,C144394
+"B4B-XH-A(LF)(SN) JST XH 4P header, 2.50mm, vertical, no boss","J2,J3,J4,J5,J6,J7",JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical,C144395
+"B5B-XH-A(LF)(SN) JST XH 5P header, 2.50mm, vertical, no boss",J10,JST_XH_B5B-XH-A_1x05_P2.50mm_Vertical,C157991
+"1715721 Screw terminal block 2P, 5.08mm","J11,J12,J13","TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal",C480516
+"RXEF030 PTC resettable fuse 0.30A hold, 72V, radial",F1,Fuse_Radial_P5.08mm,C18384
+"BC547B (LGE, verify C-B-E) NPN transistor BC547B, TO-92","Q1,Q2,Q3",TO-92_Inline_C-B-E_P2.54mm,C713613
+MFR-25FBF52-1K Resistor 1k 1% 0.25W axial,"R1,R3,R5",R_Axial_P10.16mm,
+MFR-25FBF52-10K Resistor 10k 1% 0.25W axial,"R2,R4,R6,R15,R16,R17",R_Axial_P10.16mm,
+ZOR-25-B-52-0R Jumper 0 ohm 0.25W axial,"R10,R11,R12,R13,R14",R_Axial_P10.16mm,
+178MU0011 Ceramic capacitor 100nF 50V radial THT P=2.54mm (NOT SMD),"C1,C2,C3,C7,C9",C_Radial_P2.54mm,C5632435
+"10YXF100MEFC5X11 Electrolytic capacitor 100uF 10V, D5x11mm, radial (C10 uses 100uF)","C8,C10",CP_Radial_D5.0mm_P2.54mm,C338167

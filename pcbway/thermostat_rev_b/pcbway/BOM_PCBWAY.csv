@@ -1,0 +1,16 @@
+﻿Item #,Designator,Qty,Manufacturer,Mfg Part #,Description / Value,Package/Footprint,Type,Your Instructions / Notes
+1,J20,1,Phoenix Contact,"1715747 (MKDS 1,5/4-5,08)","MKDS 4P 230V - Screw terminal 4P 5.08 mm 250 V 17.5 A (230 V side: L, COMP, CALOR, VENT)",TerminalBlock_P5.08mm_1x04,THT,
+2,F2,1,Littelfuse,37416300000 (TR5 T6.3A),"T6.3A 250V - Fuse TR5 time-lag 6.3 A 250 VAC, 5.08 mm (alt. Schurter MST 250 0034.6623)",Fuse_TR5_P5.08mm,THT,
+3,"RL1,RL2,RL3",3,Hongfa,HF115F/005-1ZS3,"HF115F/005-1ZS3 - Relay SPDT 16 A 250 VAC, 5 V coil 62 ohm (variant ...AF with AgSnO2 also fits)",Relay_THT_HF115F-1ZS3,THT,Mains side: orientation per silkscreen; pin COM in the middle column
+4,U1,2,generic,"1x15 female header 2.54 mm, 8.5 mm",NodeMCU ESP8266 - NodeMCU socket (2 pcs) in the OUTER rows for LoLin v3 / INNER rows for Amica v2,2x PinSocket_1x15_P2.54mm,THT,Do NOT assemble: customer solders the sockets (row choice depends on module)
+5,"R1,R3,R5,R18,R19",5,UNI-ROYAL,0805W8F1001T5E,1k - Resistor 1 kohm 1% 0805,R0805,SMD,
+6,"R2,R4,R6,R9,R15,R16,R17",7,UNI-ROYAL,0805W8F1002T5E,10k - Resistor 10 kohm 1% 0805,R0805,SMD,
+7,"Q1,Q2,Q3",3,Shandong Jingdao,BC817-40,"BC817-40 - NPN 45 V 500 mA hFE 250-600, SOT-23",SOT-23-3,SMD,
+8,"D1,D2,D3",3,Changjiang,1N4148W,1N4148W - Diode 100 V 150 mA SOD-123,SOD-123,SMD,Diode: cathode bar to the right (towards +5V)
+9,J1,1,Phoenix Contact,"1715721 (MKDS 1,5/2-5,08)","5V IN - Screw terminal 2P 5.08 mm, 5 V input",TerminalBlock_P5.08mm_1x02,THT,
+10,F1,1,Littelfuse,1812L110/16DR,1.1A PTC - PTC resettable 1.1 A hold 16 V 1812,1812,SMD,
+11,C1,1,TWBOR,CJ221MD711B3,"220uF 16V - Electrolytic 220 uF 16 V 6.3 x 11 mm, 2.5 mm",CP_Radial_D6.3mm_P2.50mm,THT,Electrolytic: + pad marked on silkscreen
+12,"C2,C3",2,Samsung,CL21B104KBCNNNC,100nF - Capacitor 100 nF 50 V X7R 0805,C0805,SMD,
+13,"J2,J5",2,JST,B4B-XH-A(LF)(SN),B4B-XH-A(LF)(SN) - JST XH 4P vertical,JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical,THT,
+14,J3,1,JST,B3B-XH-A(LF)(SN),DHT22 - JST XH 3P vertical,JST_XH_B3B-XH-A_1x03_P2.50mm_Vertical,THT,
+15,J4,1,JST,B2B-XH-A(LF)(SN),ON/OFF - JST XH 2P vertical,JST_XH_B2B-XH-A_1x02_P2.50mm_Vertical,THT,

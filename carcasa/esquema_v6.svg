@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1700 1180" width="1700" height="1180" font-family="DejaVu Sans, Arial, sans-serif">
+<rect width="1700" height="1180" fill="#fff"/>
+<text x="30.0" y="38.0" font-size="22" text-anchor="start" fill="#222" font-weight="bold">Termostato ESP8266 v6 (preliminar) – 206 × 120 × 44.5 mm · solo pantalla DWIN 7" táctil · sin potenciómetro</text>
+<text x="30.0" y="60.0" font-size="12" text-anchor="start" fill="#555" font-weight="normal">Pantalla (190,5 × 105,4 × 13,6; área activa 154,1 × 85,9) según listados de distribuidores, sin plano oficial: SUPUESTA. Resto de módulos genéricos.</text>
+<text x="472.0" y="86.0" font-size="14" text-anchor="middle" fill="#222" font-weight="bold">① Interior (sin tapa ni pantalla)</text>
+<rect x="60.0" y="120.0" width="824.0" height="480.0" fill="#e8eaee" stroke="#000" stroke-width="1.5"/>
+<rect x="72.0" y="132.0" width="800.0" height="456.0" fill="#dfe6df" stroke="#555"/>
+<rect x="504.0" y="132.0" width="368.0" height="160.0" fill="#f3e2e2" stroke="#a33"/>
+<rect x="492.0" y="132.0" width="12.0" height="172.0" fill="#8c8c8c" stroke="#444"/>
+<rect x="492.0" y="292.0" width="380.0" height="12.0" fill="#8c8c8c" stroke="#444"/>
+<rect x="84.0" y="160.0" width="400.0" height="400.0" fill="#1f6b3a" stroke="#000"/>
+<text x="284.0" y="360.0" font-size="12" text-anchor="middle" fill="#fff" font-weight="normal">PCB 100×100 (SELV)</text>
+<circle cx="104.0" cy="540.0" r="6.0" fill="#fff" stroke="#000"/>
+<circle cx="104.0" cy="180.0" r="6.0" fill="#fff" stroke="#000"/>
+<circle cx="464.0" cy="540.0" r="6.0" fill="#fff" stroke="#000"/>
+<circle cx="464.0" cy="180.0" r="6.0" fill="#fff" stroke="#000"/>
+<rect x="528.0" y="142.0" width="328.0" height="144.0" fill="#2f7a46" stroke="#143" stroke-width="1.5"/>
+<rect x="566.6" y="150.0" width="50.8" height="116.0" rx="2" fill="#2b4f9a" stroke="#000"/>
+<text transform="translate(595.0,208.0) rotate(-90)" font-size="10" text-anchor="middle" fill="#fff">HF115F J11</text>
+<rect x="638.6" y="150.0" width="50.8" height="116.0" rx="2" fill="#2b4f9a" stroke="#000"/>
+<text transform="translate(667.0,208.0) rotate(-90)" font-size="10" text-anchor="middle" fill="#fff">HF115F J12</text>
+<rect x="710.6" y="150.0" width="50.8" height="116.0" rx="2" fill="#2b4f9a" stroke="#000"/>
+<text transform="translate(739.0,208.0) rotate(-90)" font-size="10" text-anchor="middle" fill="#fff">HF115F J13</text>
+<rect x="808.0" y="167.4" width="32.0" height="81.3" fill="#4a8a3c" stroke="#222"/>
+<text x="824.0" y="136.0" font-size="8" text-anchor="middle" fill="#a33" font-weight="normal">bornas</text>
+<text x="692.0" y="136.0" font-size="10" text-anchor="middle" fill="#a33" font-weight="bold">BOLSA 230 V (tabiques; cubierta propia)</text>
+<rect x="520.0" y="348.0" width="124.0" height="232.0" fill="#1b2f78" stroke="#000"/>
+<text transform="translate(586.0,464.0) rotate(-90)" font-size="10" text-anchor="middle" fill="#fff">NodeMCU (invertido, USB ↓ pared inferior)</text>
+<rect x="701.8" y="487.0" width="60.4" height="100.4" fill="#f2f2f2" stroke="#2c4f9a" stroke-width="2"/>
+<text x="732.0" y="537.2" font-size="10" text-anchor="middle" fill="#2c4f9a" font-weight="normal">DHT22</text>
+<rect x="664.0" y="448.0" width="6.0" height="136.0" fill="#9fc4e8" stroke="#06c"/>
+<g stroke="#b00"><line x1="60" y1="624.0" x2="884.0" y2="624.0"/><line x1="60" y1="620.0" x2="60" y2="628.0"/><line x1="884.0" y1="620.0" x2="884.0" y2="628.0"/></g><text x="472.0" y="620.0" font-size="11" text-anchor="middle" fill="#b00" font-weight="normal">206</text>
+<g stroke="#b00"><line x1="38" y1="120" x2="38" y2="600.0"/><line x1="34" y1="120" x2="42" y2="120"/><line x1="34" y1="600.0" x2="42" y2="600.0"/></g><text transform="translate(32,360.0) rotate(-90)" font-size="11" text-anchor="middle" fill="#b00">120</text>
+<text x="472.0" y="650.0" font-size="14" text-anchor="middle" fill="#222" font-weight="bold">② Frontal: solo pantalla (sin mando)</text>
+<rect x="60.0" y="670.0" width="824.0" height="480.0" rx="5" fill="#d6d9de" stroke="#000" stroke-width="1.5"/>
+<rect x="162.8" y="737.2" width="618.4" height="345.6" fill="#0b1830" stroke="#000"/>
+<text x="472.0" y="904.0" font-size="64" text-anchor="middle" fill="#9fe8ff" font-weight="bold">22,5 °C</text>
+<text x="472.0" y="950.0" font-size="22" text-anchor="middle" fill="#9fe8ff" font-weight="normal">Consigna 21,0 · HEAT · WiFi OK</text>
+<g stroke="#b00"><line x1="162.8" y1="667.0" x2="781.2" y2="667.0"/><line x1="162.8" y1="663.0" x2="162.8" y2="671.0"/><line x1="781.2" y1="663.0" x2="781.2" y2="671.0"/></g><text x="472.0" y="663.0" font-size="11" text-anchor="middle" fill="#b00" font-weight="normal">ventana 154.6</text>
+<text x="1150.0" y="86.0" font-size="14" text-anchor="middle" fill="#222" font-weight="bold">③ Sección lateral (pared a la izquierda)</text>
+<rect x="1010.0" y="120.0" width="18.0" height="480.0" fill="#bbb" stroke="#333"/>
+<rect x="1010.0" y="120.0" width="252.0" height="12.0" fill="#bbb" stroke="#333"/>
+<rect x="1010.0" y="588.0" width="252.0" height="12.0" fill="#bbb" stroke="#333"/>
+<rect x="1262.0" y="120.0" width="15.0" height="480.0" fill="#aaa" stroke="#333"/>
+<rect x="1180.4" y="149.2" width="81.6" height="421.6" fill="#111" stroke="#333"/>
+<rect x="1064.0" y="160.0" width="9.6" height="400.0" fill="#1f6b3a" stroke="#333"/>
+<rect x="1073.6" y="160.0" width="84.0" height="400.0" fill="#9fd4ad" stroke="#333"/>
+<rect x="1052.0" y="142.0" width="9.6" height="144.0" fill="#2f7a46" stroke="#333"/>
+<rect x="1061.6" y="150.0" width="94.2" height="116.0" fill="#2b4f9a" stroke="#333"/>
+<rect x="1163.0" y="132.0" width="9.0" height="160.0" fill="#777" stroke="#333"/>
+<rect x="1049.0" y="348.0" width="9.6" height="232.0" fill="#1b2f78" stroke="#333"/>
+<rect x="1058.6" y="372.0" width="105.0" height="184.0" fill="#8fa3d9" stroke="#333"/>
+<g stroke="#b00"><line x1="1010.0" y1="624.0" x2="1277.0" y2="624.0"/><line x1="1010.0" y1="620.0" x2="1010.0" y2="628.0"/><line x1="1277.0" y1="620.0" x2="1277.0" y2="628.0"/></g><text x="1143.5" y="620.0" font-size="11" text-anchor="middle" fill="#b00" font-weight="normal">profundidad 44.5</text>
+<g stroke="#b00"><line x1="1180.4" y1="654.0" x2="1262.0" y2="654.0"/><line x1="1180.4" y1="650.0" x2="1180.4" y2="658.0"/><line x1="1262.0" y1="650.0" x2="1262.0" y2="658.0"/></g><text x="1221.2" y="650.0" font-size="11" text-anchor="middle" fill="#b00" font-weight="normal">pantalla 13.6</text>
+<g stroke="#b00"><line x1="1010.0" y1="684.0" x2="1180.4" y2="684.0"/><line x1="1010.0" y1="680.0" x2="1010.0" y2="688.0"/><line x1="1180.4" y1="680.0" x2="1180.4" y2="688.0"/></g><text x="1095.2" y="680.0" font-size="11" text-anchor="middle" fill="#b00" font-weight="normal">internos 28.4</text>
+<text x="1010.0" y="726.0" font-size="14" text-anchor="start" fill="#222" font-weight="bold">Cotas</text>
+<rect x="1010.0" y="743.0" width="640.0" height="28.0" fill="#f6f6f6" stroke="none"/>
+<text x="1018.0" y="762.0" font-size="12" text-anchor="start" fill="#222" font-weight="bold">Caja exterior</text>
+<text x="1140.0" y="762.0" font-size="11" text-anchor="start" fill="#222" font-weight="normal">206 × 120 × 44.5 mm, sin mando ni saliente</text>
+<rect x="1010.0" y="773.0" width="640.0" height="28.0" fill="#fff" stroke="none"/>
+<text x="1018.0" y="792.0" font-size="12" text-anchor="start" fill="#222" font-weight="bold">Pantalla</text>
+<text x="1140.0" y="792.0" font-size="11" text-anchor="start" fill="#222" font-weight="normal">DWIN 7" 800×480 táctil: 190.5 × 105.4 × 13.6, activa 154.1 × 85.9 (supuesto)</text>
+<rect x="1010.0" y="803.0" width="640.0" height="28.0" fill="#f6f6f6" stroke="none"/>
+<text x="1018.0" y="822.0" font-size="12" text-anchor="start" fill="#222" font-weight="bold">Superficie útil</text>
+<text x="1140.0" y="822.0" font-size="11" text-anchor="start" fill="#222" font-weight="normal">132 cm² (v5: 50 cm², v1: 2 OLED ≈ 12 cm²)</text>
+<rect x="1010.0" y="833.0" width="640.0" height="28.0" fill="#fff" stroke="none"/>
+<text x="1018.0" y="852.0" font-size="12" text-anchor="start" fill="#222" font-weight="bold">Cableado</text>
+<text x="1140.0" y="852.0" font-size="11" text-anchor="start" fill="#222" font-weight="normal">5 V + GND, TX → D3, RX ← D4 (J10); A0 libre (USE_POT 0)</text>
+<rect x="1010.0" y="863.0" width="640.0" height="28.0" fill="#f6f6f6" stroke="none"/>
+<text x="1018.0" y="882.0" font-size="12" text-anchor="start" fill="#222" font-weight="bold">Ventilación</text>
+<text x="1140.0" y="882.0" font-size="11" text-anchor="start" fill="#222" font-weight="normal">pasiva: techo bolsa 5.4 cm² · DHT 0.6 cm²</text>
+</svg>

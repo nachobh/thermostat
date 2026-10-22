@@ -1,77 +1,145 @@
-# Termostato — Checklist de fabricación y entrega
+# Checklist de fabricación
 
-Actualizado: 2026-09-10. Sustituye el checklist §9 del análisis (tenía un item
-contradictorio: pedía "ninguna salida en GPIO15" cuando la decisión §5 mantiene el
-SSR de calor en GPIO15 protegido por pull-down).
+Actualizado: 2026-10-01. Para pedir la PCB desnuda bloquean las comprobaciones
+físicas de huellas/fijación de las secciones 1–2, la revisión independiente de
+la sección 5 y la aceptación del visor/DFM de PCBWay. Las pruebas de firmware,
+banco y potencia de las secciones 3–4 bloquean la instalación, no la fabricación.
 
-## 1. Firmware (`thermostat.ino`)
+## 1. Esquema y piezas físicas
 
-- [x] Pines sin cambios respecto al original (D7=frío, D8=calor, D6=ventilador,
-      D5=DHT22, D3/D4 botones, D0 on/off, A0 pot)
-- [x] NaN del DHT no mata el servidor web (`server.handleClient()` siempre)
-- [x] Condición del ventilador simplificada (P8)
-- [ ] Compilar con Arduino IDE / `arduino-cli` para ESP8266 y resolver warnings
-- [ ] Clamp de rango en `/temp` (15–30 °C) — ver pending.md #10
-- [ ] `Secrets.h` con credenciales fuera del repo + `Secrets.h.example` dentro
-- [ ] Test en banco: sin carga AC, solo LEDs en lugar de SSR, verificar:
-      - [ ] Arranque normal con GPIO15 "cargado" (simular LED SSR)
-      - [ ] Lógica auto: Δt enciende frío/calor/ventilador según §1
-      - [ ] Anti-ciclos: ningún cambio de estado más de 1 vez / 300 s
-      - [ ] Endpoints: `/temp`, `/hot`, `/cold`, `/fan`, `/auto` responden
-      - [ ] Interruptor OFF apaga todo y resetea los forced flags
-      - [ ] DHT desconectado → web sigue viva, SSR no conmutan
+- [x] Borne Eberle 1 = calefacción, 3 = ventilador, 4 = compresor.
+- [x] Borne 5 = L, 7 = N 240 V; 0/2/6 sin conexión en las fotos.
+- [x] PCB sólo SELV; tres SSR y toda la red externos.
+- [x] Tres drivers: `GPIO→1k→B`, `10k B→GND`, `E→GND`, `C→CTRL-`, `+5V→SSR+`.
+- [x] D8/GPIO15 dispone de pull-down físico y latch LOW antes de OUTPUT.
+- [x] NodeMCU externo por mazo; no tiene huella en el PCB.
+- [ ] Presentar un BC547B real y confirmar C-B-E.
+- [x] Módulos externos conectados por JST-XH, sin huellas de OLED/RTC.
+- [ ] Confirmar que un OLED se puede configurar a 0x3D y el otro a 0x3C.
+- [ ] Medir pull-ups I2C de los módulos; dejar las 4,7 kΩ de placa DNP si ya
+      existen suficientes en paralelo.
+- [ ] Presentar físicamente JST-XH 3/4/5, MKDS, PTC y pasivas sobre impresión
+      1:1; los sensores y mandos son externos.
+- [ ] Verificar rango A0 del NodeMCU real; añadir divisor en mazo si precisa.
+- [ ] Verificar cableado del interruptor D0–3V3 (cerrado = ON) y pulsadores
+      D3/D4–GND; no mantener pulsados durante el arranque.
 
-## 2. Esquema (`sketch_pcb.fzz`)
+## 2. PCB y Gerbers
 
-- [x] 3× NPN con colector→SSR IN(+), emisor→GND (netlist verificado por script)
-- [x] 3× 1k GPIO→base, 3× 10k base→GND (netlist verificado)
-- [x] 100nF en paralelo con cada entrada SSR (netlist verificado)
-- [x] Pull-ups 4.7k en SDA/SCL a 3V3 (netlist verificado)
-- [x] Wires GPIO→SSR directos antiguos eliminados (netlist verificado)
-- [x] DHT22 DATA→D5, VDD→3V3, GND→GND + 100nF (netlist verificado)
-- [ ] Cambiar la parte RTC de DS1307 a DS3231 en el .fzz (pending #2)
-- [ ] Añadir fusible + MOV + bornas AC al esquema, o documentar cableado externo (pending #3)
-- [ ] Abrir en Fritzing y ordenar posiciones visuales de las partes nuevas (pending #4)
-- [ ] Comprobar que Fritzing no reporta wires sueltos ni partes faltantes
-- [ ] (Opcional) Cambiar parte OLED `grove_oled_128x96` por una 128×64 para que
-      el esquema no confunda
+- [x] Una sola placa de 100 × 100 mm.
+- [x] Cobre antiguo no verificado eliminado.
+- [x] Huellas dentro del borde; NodeMCU/antena fuera de la PCB.
+- [x] Serigrafía de bornas `+/-` y referencias J11 COMP4, J12 HEAT1, J13 FAN3;
+      tabla de pines completa en `PINOUT_Y_MONTAJE.md`.
+- [x] 25 redes SELV ruteadas; validador geométrico: 0 infracciones ≥0,20 mm.
+- [x] Gerber/Excellon exportados y abiertos en `gerbv`.
+- [x] Cuatro taladros NPTH Ø3,0 mm a 5 mm de cada borde; centros 90 × 90 mm,
+      zona de radio 3,5 mm sin componentes ni cobre.
+- [ ] Imprimir PCB 1:1 y presentar todas las piezas físicas.
+- [ ] Confirmar caja, altura de bornas, salida de mazos y tornillería real; un
+      agujero nominal de 3,0 mm puede quedar justo para un tornillo M3.
+- [x] Gerbers sólo conectan señales SELV; no existe pad/bornal de red.
 
-## 3. Layout PCB (PCBWay 2 capas, 1.6 mm, HASL)
+## 3. Firmware y banco SELV
 
-- [ ] Creepage AC/DC ≥ 6 mm entre zona 220 V y lógica 3.3 V
-- [ ] SSR en la frontera: LED de entrada lado DC, triac lado AC
-- [ ] Fusible en línea L antes de todo lo AC; MOV entre L y N junto a borna
-- [ ] Ninguna traza DC bajo la zona AC; capa inferior = GND en zona AC
-- [ ] Trazas entrada SSR ≥ 0.8 mm; alimentación ESP ≥ 1 mm
-- [ ] Estrella de GND: potencia y lógico unidos en un punto cerca del NodeMCU
-- [ ] DHT22 lejos de SSR y zona AC (deriva térmica)
-- [ ] RTC en conector (no soldado) para cambio de pila
-- [ ] DRC pasado con las separaciones AC antes de enviar
-- [ ] Silk: identificar cada borna (L, N, FRÍO, CALOR, VENTILADOR) y cada SSR
+- [x] Nombres de pines coherentes con las salidas reales.
+- [x] WiFi y RTC tienen fallback; el servidor continúa atendiendo.
+- [x] DHT usa media válida de 60 s, descarta ±2 °C y falla apagando.
+- [x] `/temp` valida 15–30 °C y no es sobrescrito hasta mover el mando.
+- [x] `/hot`/`/heating`, `/cold`/`/compressor` y `/fan` conservados.
+- [x] Activaciones remotas requieren `confirm=true`.
+- [x] Los apagados de calefacción/compresor no esperan el temporizador de
+      rearranque; una activación web sin muestra DHT reciente se rechaza.
+- [x] Credenciales retiradas a `Secrets.h` local.
+- [x] D0 tiene pull-down físico y `INPUT_PULLDOWN_16`; desconexión = OFF.
+- [x] D3/D4 tienen pull-ups físicos de 10 kΩ y `INPUT_PULLUP`.
+- [x] Compila con Arduino CLI 1.5.1, core ESP8266 3.1.2, DHT 1.4.7,
+      RTClib 2.1.4 y U8g2 2.36.19 para `nodemcuv2`, sin credenciales WiFi.
+- [ ] Flashear y probar reset/boot con los tres drivers conectados.
+- [ ] Medir GPIO15 LOW durante arranque.
+- [ ] Probar fallos de DHT, RTC y WiFi y el interruptor físico OFF.
+- [ ] Probar anti-ciclo, exclusión calor/compresor y ventilación obligatoria.
 
-## 4. Compra (BOM §4 del análisis)
+## 4. Potencia externa
 
-- [ ] Medir amperaje real de cada carga ANTES de pedir → SSR-25DA elegido (pending #1 resuelto); confirmar pico de arranque con pinza al montar
-- [ ] RTC: comprar DS3231 (no DS1307) + pila CR1220
-- [ ] Verificar CTR/margen del SSR elegido a 3.3 V con el driver NPN (pending P7) — si no dispara firme, R base 1k→470Ω
-- [ ] Interruptor: verificar que cierra contra GND (pending #14)
-- [ ] Portafusibles + fusible 250 V 3–5 A + MOV 14D471K + bornas AC
+- [ ] Medir corriente de marcha y pico de arranque de 1, 3 y 4.
+- [ ] Verificar cada SSR-40DA barato individualmente antes de instalarlo.
+- [ ] Dimensionar disipadores con la medida real; ensayo de una hora a carga.
+- [ ] Seleccionar protección de L según conductor, carga, pico y protección
+      aguas arriba; registrar valor, curva y poder de corte.
+- [ ] Instalar TMOV 275 VAC después de la protección, con conexión L-N corta.
+- [ ] Cubrir bornes, fijar cables y mantener barrera/8 mm frente a SELV.
+- [ ] Decidir si hace falta seccionador/contactor ante fallo del SSR en corto.
 
-## 5. Montaje y puesta en marcha
+## 5. Pedido: elegir opción A o B
 
-- [ ] Primer arranque SIN carga AC (todo fuera del SSR)
-- [ ] Medir con multímetro: GPIO15 LOW al arrancar con el driver soldado
-- [ ] Verificar cada canal por separado (frío → calor → ventilador) con pinza amperimétrica
-- [ ] Comprobar temperatura de los SSR tras 30 min de operación continua
-- [ ] Prueba de fallo: desconectar DHT22 en marcha → no debe conmutar nada, web viva
-- [ ] Prueba de corte de luz → RTC mantiene hora, arranca en estado seguro (todo OFF)
+**Decidido 2026-10-19: opción B (PCBWay turn-key THT, suministra y monta todo lo posible).**
 
-## 6. Entrega / repo
+- [ ] Segunda revisión **por otra persona** de esquema, PCB y Gerbers; la
+      revisión documental automatizada está en `VERIFICACION_HUELLAS.md`.
+- [ ] Subir el ZIP al visor/DFM de PCBWay y comprobar que acepta sus ocho capas,
+      100 × 100 mm y taladros; no pagar si muestra discrepancias.
+- [ ] Opción A: PCB desnuda, 2 capas, 1,6 mm, 1 oz, HASL; revisar la BOM manual
+      y presentar los componentes propios sobre la plantilla 1:1.
+- [ ] Opción B: mismos Gerbers, montaje THT turn-key de 38 referencias según
+      `BOM_PCBWAY_TURNKEY.csv`; R7–R9 DNP. Confirmar oferta, disponibilidad,
+      polaridades, huellas y cualquier sustitución propuesta por PCBWay.
+- [x] El XY bruto de Fritzing no se envía: F1 aparece erróneamente como SMT;
+      `COLOCACION_THT_REFERENCIA.csv` es la tabla corregida y orientativa.
+- [ ] No generar una imagen/carga AC como parte de una prueba automática.
 
-- [ ] Commit de `thermostat.ino` corregido (lleva modificado desde `e326b9c`)
-- [ ] Trackear `ANALISIS_PCB_THERMOSTAT.md`, `sketch_pcb.fzz`, `pending.md`, `checklist.md`
-- [ ] Decidir destino de las fotos de WhatsApp (repo vs fuera)
-- [ ] `thermostat_report.md` commiteado como referencia histórica
-- [ ] README actualizado con: mapa de pines correcto, topología driver NPN,
-      advertencia GPIO15, endpoints web, política del interruptor OFF
-- [ ] Repo privado o credenciales rotadas si fue público (pending #5)
+## Relés HF115F (añadido 2026-10-21)
+
+- [x] Hoja de Hongfa revisada (`Descargas/hf115f.pdf`): 29 × 12,7 × 15,7 mm, bobina 5 V 62 Ω, 16 A 250 VAC solo contacto NO (1Z).
+- [ ] Confirmar que el anuncio de AliExpress es exactamente HF115F/005-1ZS3 (o 1ZS3A), 5 V, paso 5 mm, 16 A; mejor distribuidor con trazabilidad (p. ej. LCSC C9225).
+- [ ] Soldar diodo 1N4007/1N4148 en cada bobina (cátodo a +5 V) antes de conectar a J11–J13.
+- [ ] Medir corriente de bobina real (≈ 80 mA) y V_CE del BC547B en banco; comprobar temperatura de F1.
+- [ ] Firmware: prueba en banco del límite de 2 bobinas y del antiarranque de 5 min (no compilado en este equipo: falta arduino-cli/core ESP8266).
+- [ ] Diseñar la mini-placa de potencia (100 × 28 mm, ≥ 8 mm de la zona SELV) y medir huella real del relé: 5 mm, 16 A, cuadrícula 2,52 mm, taladros Ø1,3 (hoja p. 4).
+- [ ] Contrastar corriente real de compresor, ventilador y calefactor con la placa de características.
+
+## Pantalla grande (v5, añadido 2026-10-21)
+
+- [ ] Confirmar modelo DWIN DMG48480 (táctil capacitivo `…_03WTC` o sin táctil), plano mecánico, niveles UART y consumo; ver `carcasa/PANTALLA_V5.md`.
+- [ ] Reescribir `thermostat.ino` para UART/DWIN (D3 RX, D4 TX) en lugar de U8g2/OLED y pulsadores; diseñar la interfaz con DGUS Tool.
+- [ ] Comprobar arranque con la pantalla conectada a GPIO0/GPIO2.
+- [ ] Imprimir `stl_v5/` solo tras medir la pantalla real.
+
+## v6: solo pantalla 7" sin potenciómetro (añadido 2026-10-21)
+
+- [ ] Confirmar variante UART del DWIN 7" (04WTC), su plano mecánico y consumo; prever cargador 5 V ≥ 2 A y bornero común de 5 V (`carcasa/PANTALLA_V6.md`).
+- [ ] Compilar con `-DUSE_POT=0` y comprobar en banco que A0 flotante no mueve la consigna.
+- [ ] Imprimir `stl_v6/` solo tras medir la pantalla real.
+
+## v7: DWIN 5,7" 4:3 sin potenciómetro (añadido 2026-10-21)
+
+- [ ] Elegir variante DWIN 5,7" con UART TTL 3,3 V y táctil capacitivo; descartar RS232 de ± 12 V sin convertidor (`carcasa/PANTALLA_V7.md`).
+- [ ] Conseguir plano mecánico (grosor 17,1–18,9 mm, orificios, área activa) y consumo; cargador ≥ 2 A.
+- [ ] Imprimir `stl_v7/` solo tras medir la pantalla real.
+
+## v8: sin tapa frontal, pantalla pegada sobre las paredes (añadido 2026-10-21)
+
+- [ ] Elegir entre v8 (144,8 × 110,2 × 68,9 enrasada) y v7 sin tapa (161 × 122 × 47,3): ver `carcasa/PANTALLA_V8.md`.
+- [ ] Probar el pegado (cinta de espuma acrílica ≥ 1 mm) con una pantalla/maqueta antes de montar la real; definir salida del mazo de la pantalla con el plano de DWIN.
+- [ ] Imprimir `stl_v8/` solo tras medir la pantalla real.
+
+## Rev B 84 × 84 con relés en placa + DWIN 4" + caja v9 (añadido 2026-10-21)
+
+- [ ] Pedir a PCBWay que deje en espera (pedido Rev A) (Rev A); no pagar JLCPCB.
+- [ ] Confirmar DWIN 4" 480 × 480 sin carcasa con UART TTL 3,3 V (DMG48480F040_01WTC o equivalente): plano, conector, consumo y RTC.
+- [ ] Medir la NodeMCU real y decidir las filas de los zócalos (exteriores LoLin v3 / interiores Amica).
+- [ ] Imprimir `pcbway/thermostat_rev_b/PCB_REV_B.svg` a 1:1 y presentar relés, borna J20, fusible F2, JST y zócalos.
+- [ ] Comprobar con el polímetro el pinout de un HF115F (COM central, NC junto a la bobina).
+- [ ] Revisar Gerber y CPL en el visor del fabricante (D1–D3 a 180°).
+- [ ] Hacer el proyecto DGUS según `firmware/thermostat_rev_b/DWIN_DGUS_REV_B.md`; flashear y probar en banco a 5 V.
+- [ ] Imprimir la caja v9 en material V-0 solo tras medir pantalla y NodeMCU; tornillos de nailon.
+
+## Rev C: conector FPC para la DWIN F040, Amica, SHT40 y caja v10 (añadido 2026-10-21)
+
+- [ ] Al recibir la DWIN: comprobar el FPC (≈ 52 mm desde el borde del LCD, según el modelo 3D de DWIN) y el lado del pin 1 antes de montar (`REV_C.md`).
+- [ ] Cargar el proyecto DGUS con el HDL662S (rotación de 180°) antes de montar la pantalla.
+- [ ] Elegir un módulo SHT40 mini (≤ 1,8 mm de grueso) para la cápsula de 20 × 20 × 3 mm.
+- [ ] Pedir presupuesto a PCBWay con montaje por las dos caras y revisión de las huellas del HF115F y del AFC07 (texto en `pcbway/thermostat_rev_c/LEEME_PEDIDO.md`).
+- [ ] Comprar o cortar una lámina aislante V-0 de ≥ 0,4 mm para la zona de 230 V entre la PCB y la pantalla.
+- [ ] Primera carga del firmware por USB en el banco; las siguientes, por OTA.
+- [ ] Rev C sin J2/J4: hacer en DGUS las teclas de encendido (0x0020–0x0022); comprobar que el estado se recuerda tras quitar la alimentación.

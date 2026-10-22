@@ -1,5 +1,11 @@
 # Informe Detallado: Conexión de SSR y Uso de Capacitores para Termostato con ESP8266 NodeMCU
 
+> **DOCUMENTO HISTÓRICO, NO USAR PARA FABRICAR.** La topología NPN descrita aquí
+> conecta erróneamente el colector a `SSR+`; el diseño vigente usa
+> `+5V→SSR+`, `SSR−→colector`, `emisor→GND`. También ha quedado obsoleta la
+> propuesta de montar red/SSR en la PCB. La referencia canónica es
+> `PASOS_HASTA_PEDIDO.md`.
+
 ## 1. Conexión de SSR con ESP8266 NodeMCU
 
 ### a. Modelos de SSR disponibles

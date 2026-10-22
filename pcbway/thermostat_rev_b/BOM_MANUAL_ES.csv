@@ -1,0 +1,16 @@
+﻿Línea,Cantidad,Referencias,Valor/función,Fabricante,Referencia de compra,LCSC,Tipo,Huella,Descripción,Montaje
+1,1,J20,MKDS 4P 230V,Phoenix Contact,"1715747 (MKDS 1,5/4-5,08)",—,THT,TerminalBlock_P5.08mm_1x04,"Screw terminal 4P 5.08 mm 250 V 17.5 A (230 V side: L, COMP, CALOR, VENT)",SÍ
+2,1,F2,T6.3A 250V,Littelfuse,37416300000 (TR5 T6.3A),—,THT,Fuse_TR5_P5.08mm,"Fuse TR5 time-lag 6.3 A 250 VAC, 5.08 mm (alt. Schurter MST 250 0034.6623)",SÍ
+3,3,RL1 RL2 RL3,HF115F/005-1ZS3,Hongfa,HF115F/005-1ZS3,C9225,THT,Relay_THT_HF115F-1ZS3,"Relay SPDT 16 A 250 VAC, 5 V coil 62 ohm (variant ...AF with AgSnO2 also fits)",SÍ
+4,2,U1,NodeMCU ESP8266,generic,"1x15 female header 2.54 mm, 8.5 mm",—,THT,2x PinSocket_1x15_P2.54mm,NodeMCU socket (2 pcs) in the OUTER rows for LoLin v3 / INNER rows for Amica v2,A MANO (zócalos)
+5,5,R1 R3 R5 R18 R19,1k,UNI-ROYAL,0805W8F1001T5E,C17513,SMD,R0805,Resistor 1 kohm 1% 0805,SÍ
+6,7,R2 R4 R6 R9 R15 R16 R17,10k,UNI-ROYAL,0805W8F1002T5E,C17414,SMD,R0805,Resistor 10 kohm 1% 0805,SÍ
+7,3,Q1 Q2 Q3,BC817-40,Shandong Jingdao,BC817-40,C2982853,SMD,SOT-23-3,"NPN 45 V 500 mA hFE 250-600, SOT-23",SÍ
+8,3,D1 D2 D3,1N4148W,Changjiang,1N4148W,C81598,SMD,SOD-123,Diode 100 V 150 mA SOD-123,SÍ
+9,1,J1,5V IN,Phoenix Contact,"1715721 (MKDS 1,5/2-5,08)",C480516,THT,TerminalBlock_P5.08mm_1x02,"Screw terminal 2P 5.08 mm, 5 V input",SÍ
+10,1,F1,1.1A PTC,Littelfuse,1812L110/16DR,C142746,SMD,1812,PTC resettable 1.1 A hold 16 V 1812,SÍ
+11,1,C1,220uF 16V,TWBOR,CJ221MD711B3,C2886738,THT,CP_Radial_D6.3mm_P2.50mm,"Electrolytic 220 uF 16 V 6.3 x 11 mm, 2.5 mm",SÍ
+12,2,C2 C3,100nF,Samsung,CL21B104KBCNNNC,C49678,SMD,C0805,Capacitor 100 nF 50 V X7R 0805,SÍ
+13,2,J2 J5,B4B-XH-A(LF)(SN),JST,B4B-XH-A(LF)(SN),C144395,THT,JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical,JST XH 4P vertical,SÍ
+14,1,J3,DHT22,JST,B3B-XH-A(LF)(SN),C144394,THT,JST_XH_B3B-XH-A_1x03_P2.50mm_Vertical,JST XH 3P vertical,SÍ
+15,1,J4,ON/OFF,JST,B2B-XH-A(LF)(SN),C158012,THT,JST_XH_B2B-XH-A_1x02_P2.50mm_Vertical,JST XH 2P vertical,SÍ

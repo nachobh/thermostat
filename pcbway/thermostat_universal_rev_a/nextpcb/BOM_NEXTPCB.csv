@@ -1,0 +1,12 @@
+Item,Designator,Quantity,Manufacturer,MPN,Description,Package,Mount,Notes
+1,"J1,J8,J9",3,JST,B3B-XH-A(LF)(SN),"JST XH 3P header, 2.50mm, vertical, no boss",JST_XH_B3B-XH-A_1x03_P2.50mm_Vertical,THT,WITHOUT boss; do not use -AM
+2,"J2,J3,J4,J5,J6,J7",6,JST,B4B-XH-A(LF)(SN),"JST XH 4P header, 2.50mm, vertical, no boss",JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical,THT,WITHOUT boss; do not use -AM
+3,J10,1,JST,B5B-XH-A(LF)(SN),"JST XH 5P header, 2.50mm, vertical, no boss",JST_XH_B5B-XH-A_1x05_P2.50mm_Vertical,THT,WITHOUT boss; do not use -AM
+4,"J11,J12,J13",3,Phoenix Contact,1715721,"Screw terminal block 2P, 5.08mm","TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal",THT,"MKDS 1,5/ 2-5,08; pin1 +5V, pin2 CTRL-; low voltage only"
+5,F1,1,Littelfuse,RXEF030,"PTC resettable fuse 0.30A hold, 72V, radial",Fuse_Radial_P5.08mm,THT,"THT radial, 5.08mm pitch (raw Fritzing XY wrongly says SMT)"
+6,"Q1,Q2,Q3",3,Diotec,BC547B,"NPN transistor BC547B, TO-92",TO-92_Inline_C-B-E_P2.54mm,THT,"Pinout C-B-E, 2.54mm pitch; NOT 1.27mm variant; flat face to straight silkscreen line"
+7,"R1,R3,R5",3,Yageo,MFR-25FBF52-1K,Resistor 1k 1% 0.25W axial,R_Axial_P10.16mm,THT,Any 1/4W axial 1k 1-5% acceptable
+8,"R2,R4,R6,R15,R16,R17",6,Yageo,MFR-25FBF52-10K,Resistor 10k 1% 0.25W axial,R_Axial_P10.16mm,THT,Any 1/4W axial 10k 1-5% acceptable
+9,"R10,R11,R12,R13,R14",5,Yageo,ZOR-25-B-52-0R,Jumper 0 ohm 0.25W axial,R_Axial_P10.16mm,THT,MANDATORY - must be populated
+10,"C1,C2,C3,C7,C9",5,TDK,FG18X7R1H104KNT06,Ceramic capacitor 100nF 50V X7R radial,C_Radial_P2.54mm,THT,"Lead spacing 2.5mm (FG18, NOT FG28 5mm); any in-stock 100nF X7R >=50V radial 2.5mm OK"
+11,"C8,C10",2,Nichicon,UVZ1A101MDD,"Electrolytic capacitor 100uF 10V, D5x11mm, radial",CP_Radial_D5.0mm_P2.54mm,THT,C10 uses 100uF instead of 47uF (OK). + to silkscreen +

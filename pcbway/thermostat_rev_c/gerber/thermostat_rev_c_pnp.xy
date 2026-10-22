@@ -1,0 +1,65 @@
+# Pick And Place List
+# Company=
+# Author=
+# eMail=
+#
+# Project=thermostat_rev_c
+# Date=23:15:47
+# CreatedBy=Fritzing 1.0.1rc.2025-04-04.debian/1.0.1-1+b6
+#
+#
+# Coordinates in mils, always center of component
+# Origin 0/0=Lower left corner of PCB
+# Rotation in degree (0-360, math. pos.)
+#
+RefDes,Description,Package,X,Y,Rotation,Side,Mount
+Description: resistance;capacitance;inductance;voltage;current;power;mpn;mn;
+VIA_D8_HEAT,";;;;;;;;","THT",2466.67,1173.75,0,Top,THT
+RL3,";;;;;;;;","THT",2244.09,2260.83,0,Top,THT
+F1,";;;;;;;;","SMD",3011.81,1555.12,0,Bottom,SMT
+R19,";;;;;;;;","SMD",1751.97,688.976,0,Bottom,SMT
+D3,";;;;;;;;","SMD",2470.47,1102.36,0,Bottom,SMT
+VIA_D8_HEAT,";;;;;;;;","THT",2466.67,1640.42,0,Top,THT
+R4,";;;;;;;;","SMD",2173.23,1307.09,0,Bottom,SMT
+VIA_DWIN_TX,";;;;;;;;","THT",2233.33,907.086,0,Top,THT
+J5,";;;;;;;;","THT",2952.76,532.48,0,Top,THT
+VIA_DWIN_TX,";;;;;;;;","THT",1566.67,1207.09,0,Top,THT
+VIA_DWIN_RX,";;;;;;;;","THT",1733.33,640.42,0,Top,THT
+R5,";;;;;;;;","SMD",2070.87,1064.96,0,Bottom,SMT
+VIA_GND,";;;;;;;;","THT",2266.67,440.42,0,Top,THT
+VIA_D6_FAN,";;;;;;;;","THT",1166.67,73.7531,0,Top,THT
+R2,";;;;;;;;","SMD",2173.23,1511.81,0,Bottom,SMT
+R17,";;;;;;;;","SMD",1751.97,791.338,0,Bottom,SMT
+VIA_GND,";;;;;;;;","THT",2166.67,1140.42,0,Top,THT
+VIA_DWIN_RX,";;;;;;;;","THT",1600,673.753,0,Top,THT
+Q3,";;;;;;;;","SMD",2283.46,1102.36,0,Bottom,SMT
+C1,";;;;;;;;","THT",2682.09,1555.12,0,Top,THT
+VIA_COIL_HEAT,";;;;;;;;","THT",2400,1107.09,0,Top,THT
+VIA_COIL_FAN,";;;;;;;;","THT",1833.33,1540.42,0,Top,THT
+VIA_D3_RXD,";;;;;;;;","THT",1800,973.753,0,Top,THT
+VIA_D8_HEAT,";;;;;;;;","THT",1966.67,1607.09,0,Top,THT
+RL2,";;;;;;;;","THT",1653.54,2260.83,0,Top,THT
+J20,";;;;;;;;","THT",3011.81,2873.23,0,Top,THT
+D2,";;;;;;;;","SMD",2470.47,1307.09,0,Bottom,SMT
+Q1,";;;;;;;;","SMD",2283.46,1511.81,0,Bottom,SMT
+C2,";;;;;;;;","SMD",2645.67,1342.52,0,Bottom,SMT
+D1,";;;;;;;;","SMD",2470.47,1511.81,0,Bottom,SMT
+R1,";;;;;;;;","SMD",2070.87,1474.41,0,Bottom,SMT
+C3,";;;;;;;;","SMD",2303.15,511.811,0,Bottom,SMT
+VIA_D6_FAN,";;;;;;;;","THT",2033.33,1273.75,0,Top,THT
+VIA_D7_COMP,";;;;;;;;","THT",966.667,1540.42,0,Top,THT
+Q2,";;;;;;;;","SMD",2283.46,1307.09,0,Bottom,SMT
+J3,";;;;;;;;","THT",2755.91,217.52,0,Top,THT
+VIA_COIL_COMP,";;;;;;;;","THT",2333.33,1507.09,0,Top,THT
+R6,";;;;;;;;","SMD",2173.23,1102.36,0,Bottom,SMT
+F2,";;;;;;;;","THT",3011.81,2262.2,0,Top,THT
+J1,";;;;;;;;","THT",2976.38,1200.79,0,Top,THT
+RL1,";;;;;;;;","THT",1062.99,2260.83,0,Top,THT
+R3,";;;;;;;;","SMD",2070.87,1269.68,0,Bottom,SMT
+U1,";;;;;;;;","THT",1227.56,664.173,0,Top,THT
+R16,";;;;;;;;","SMD",1751.97,996.063,0,Bottom,SMT
+VIA_D7_COMP,";;;;;;;;","THT",1966.67,1473.75,0,Top,THT
+R18,";;;;;;;;","SMD",1751.97,893.7,0,Bottom,SMT
+VIA_COIL_FAN,";;;;;;;;","THT",2333.33,1307.09,0,Top,THT
+VIA_D8_HEAT,";;;;;;;;","THT",966.667,1607.09,0,Top,THT
+J6,";;;;;;;;","SMD",1261.81,1432.15,0,Bottom,SMT

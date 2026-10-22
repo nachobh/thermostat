@@ -1,0 +1,15 @@
+﻿Line,Quantity,Designators,Description,Package/Footprint,Type,Manufacturer Part Number / Specification,Assembly,Notes
+1,3,"J1, J8, J9",JST XH 3 vías,2.50 mm; 0.90 mm PTH,THT,JST B3B-XH-A,POPULATE,Versión SIN boss; NO sustituir por B3B-XH-AM. Mazo XHP-3 + SXH-001T-P0.6
+2,6,"J2, J3, J4, J5, J6, J7",JST XH 4 vías,2.50 mm; 0.90 mm PTH,THT,JST B4B-XH-A,POPULATE,Versión SIN boss; NO sustituir por B4B-XH-AM. Mazo XHP-4 + SXH-001T-P0.6
+3,1,J10,JST XH 5 vías,2.50 mm; 0.90 mm PTH,THT,JST B5B-XH-A,POPULATE,Versión SIN boss; NO sustituir por B5B-XH-AM. Mazo XHP-5 + SXH-001T-P0.6
+4,3,"J11, J12, J13",Borna de control SSR 2 vías,5.08 mm; 1.30 mm PTH,THT,"Phoenix Contact MKDS 1,5/ 2-5,08; 1715721",POPULATE,Sólo 5 V SELV; pin 1 +5 V; pin 2 CTRL−
+5,1,F1,PTC 0.30 A hold,5.08 mm PTH,THT,Littelfuse RXEF030; RF2565-000,POPULATE,Protege únicamente la rama +5 V de entradas SSR
+6,3,"Q1, Q2, Q3",NPN BC547B,TO-92 C-B-E en línea; paso 2.54 mm; taladro 0.90 mm,THT,"Diotec BC547B TO-92 en cinta, NO variante BK de 1.27 mm",POPULATE,Cara plana hacia línea recta de serigrafía; C/B/E marcados; presentar terminales antes de soldar
+7,3,"R1, R3, R5",1 kΩ 0.25 W,Axial THT; paso 10.16 mm,THT,Resistencia axial 1 kΩ ±5 %,POPULATE,Serie entre GPIO y base
+8,3,"R2, R4, R6",10 kΩ 0.25 W,Axial THT; paso 10.16 mm,THT,Resistencia axial 10 kΩ ±5 %,POPULATE,Pull-down base-emisor; imprescindible para GPIO15
+9,1,R15,10 kΩ 0.25 W,Axial THT; paso 10.16 mm,THT,Resistencia axial 10 kΩ ±5 %,POPULATE,Pull-down D0/GPIO16; cable desconectado = OFF
+10,2,"R16, R17",10 kΩ 0.25 W,Axial THT; paso 10.16 mm,THT,Resistencia axial 10 kΩ ±5 %,POPULATE,Pull-up externos D3/GPIO0 y D4/GPIO2 para arranque
+11,5,"R10, R11, R12, R13, R14",Puente 0 Ω,Axial THT; paso 10.16 mm,THT,Puente de alambre aislado o resistor axial 0 Ω,POPULATE,Cinco puentes obligatorios; no omitir
+12,5,"C1, C2, C3, C7, C9",100 nF 50 V,Cerámico radial; paso 2.54 mm,THT,100 nF X7R o cerámico radial ≥50 V,POPULATE,C1–C3 en entradas SSR; C7 a 5 V; C9 a 3.3 V
+13,1,C8,100 µF ≥10 V,Electrolítico radial Ø≤5 mm; paso 2.54 mm,THT,100 µF 10 V radial 5 × 11 mm,POPULATE,"Positivo a +5V_SSR, negativo a GND"
+14,1,C10,47 µF ≥10 V,Electrolítico radial Ø≤5 mm; paso 2.54 mm,THT,47 µF 10 V radial 5 × 11 mm,POPULATE,"Positivo a 3V3, negativo a GND"

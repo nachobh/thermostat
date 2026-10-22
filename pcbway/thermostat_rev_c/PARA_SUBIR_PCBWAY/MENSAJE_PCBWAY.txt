@@ -1,0 +1,28 @@
+Hi Lynne,
+
+As announced, here is the new revision of the thermostat board (Rev C) for a turnkey PCBA quotation.
+It replaces order (pedido Rev A) (Rev A), which we have cancelled.
+
+Files attached:
+- thermostat_rev_c_GERBER.zip (Gerber RS-274X + Excellon, includes bottom paste)
+- BOM_PCBWAY_REV_C.xlsx (14 lines, manufacturer part numbers)
+- CENTROID_PCBWAY_REV_C.xlsx (coordinates in mm, origin bottom-left, viewed from the top)
+- ASSEMBLY_DRAWING_REV_C.pdf (top and bottom views)
+
+Board: 84 x 84 mm, 2 layers, FR-4 1.6 mm, 1 oz, HASL lead-free, green mask, white silkscreen. Quantity: 2 assembled boards.
+
+Assembly:
+- SMT on ONE side only, the BOTTOM side: 20 SMD parts (incl. J6, FPC connector JUSHUO AFC07-S50ECA-00). There are no SMD parts on the top side.
+- Through-hole parts on the TOP side: 3 relays, 2 screw terminals, fuse, electrolytic capacitor, 2 JST XH headers and 2 female headers 1x15 (U1).
+
+Before production, could your engineers please double-check against the datasheets:
+1) Hongfa HF115F/005-1ZS3 relay footprint (5 mm pinning, 16 A version): COM must be the middle contact column, NC the column next to the coil and NO the far end.
+2) JUSHUO AFC07-S50ECA-00 land pattern and orientation: upper contact, mounted on the bottom side, with the opening facing the top edge of the board (the 230 V side).
+
+The board carries 230 VAC above the dashed silkscreen line. Please keep the solder mask, copper and clearances exactly as designed in that area, and do not place the PCBWay order number there (the bottom side, lower half, is fine).
+
+If any part is not available, please propose an equivalent before ordering it.
+
+Thank you very much!
+Best regards,
+Ignacio

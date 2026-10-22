@@ -1,0 +1,109 @@
+He revisado el repositorio, las fotos, el firmware y el .fzz. Conclusión: no está listo para pedir la PCB. PASOS_HASTA_PEDIDO.md parte de varias conclusiones incorrectas y omite bloqueantes de seguridad.
+
+  ## Hallazgos críticos
+
+  1. El driver NPN–SSR está mal conectado.
+
+     En thermostat/ANALISIS_PCB_THERMOSTAT.md:100 y en el .fzz aparece:
+
+     colector → SSR IN(+)
+     SSR IN(−) → GND
+     emisor → GND
+
+     Así no existe alimentación para el LED del SSR. Al activar el transistor solo se lleva IN+ a GND.
+
+     Una conmutación low-side típica sería:
+
+     +5 V → SSR IN(+)
+             SSR IN(−) → colector NPN
+                          emisor → GND
+
+     Además, bajar la resistencia de base no aumenta directamente la corriente del LED como afirma thermostat/PIEZAS_Y_PEDIDO_PCBWAY.md:79; esa corriente depende principalmente de la entrada del SSR y de su tensión de alimentación.
+
+  2. La interpretación del cableado Eberle es incorrecta.
+
+     thermostat/PASOS_HASTA_PEDIDO.md:7 afirma que los terminales 1,3,4,5,7 equivalen a «compresor, ventilador y switch output». La etiqueta fotografiada realmente identifica:
+      - 3: LOAD-COMPRESSOR
+      - 2: LOAD-FAN
+      - 1: LOAD-COOLING
+      - 0: LOAD-HEATING
+      - 4: L1 (HOT) SUPPLY
+      - 5/7: conexiones de alimentación/neutro según 24/240 V
+
+     En la foto, el terminal 2 —ventilador— no está conectado, mientras que el 1 —cooling— sí lo está. Por tanto, no está demostrado que hagan falta tres SSR ni que puedan mapearse a frío/calor/ventilador. El catálogo oficial confirma que el KLR-E 7007 tiene salidas diferenciadas de calor, frío, ventilador, compresor y salida de interruptor, por lo que hay que reproducir la función concreta del cableado existente, no inferirla por cantidad de hilos: catálogo oficial
+     Eberle.
+
+  3. sketch_pcb.fzz no genera Gerbers actualmente.
+
+     Probé la exportación con Fritzing 1.0.1 en un temporal. El resultado fue:
+
+     multiple boards found
+
+     No se creó ningún Gerber. El archivo contiene dos PCB de 50 × 70 mm, y los componentes añadidos programáticamente están repartidos muy fuera de ellas. Fritzing también notificó numerosos conectores/terminales inválidos en las partes.
+
+     Por tanto, en thermostat/PASOS_HASTA_PEDIDO.md:31 no es correcto decir que solo queda ordenar la estética. Hace falta reconstruir esquema y layout, resolver las dos placas y validar las partes.
+
+  4. Las reglas de aislamiento se contradicen peligrosamente.
+
+     thermostat/PASOS_HASTA_PEDIDO.md:39 dice simultáneamente:
+      - ninguna traza DC bajo la zona AC;
+      - capa inferior = GND en zona AC;
+      - unir «GND de potencia y lógico».
+
+     En la zona de red no debe existir un plano de GND lógico. El lado AC del SSR está aislado y no tiene un “GND de potencia” que deba unirse al ESP8266. Debe haber keepout de cobre en ambas capas dentro de la barrera AC/SELV, incluyendo planos, vías y pads no esenciales.
+
+     Los 6 mm pueden emplearse como objetivo conservador, pero la distancia final depende de tensión, material, contaminación, sobretensiones y construcción. Un visor Gerber o el DRC de fabricación solo comprueba fabricabilidad, no certifica seguridad eléctrica.
+
+  5. El footprint del SSR no corresponde con la compra propuesta.
+
+     El .fzz utiliza la parte Fritzing RELAY-S108T02-PTH, un SSR para montaje en PCB. El SSR-25DA descrito en la documentación es normalmente un módulo externo con cuatro tornillos y montaje sobre disipador. No puede sustituirse usando ese footprint.
+
+     Hay que decidir una arquitectura:
+      - PCB únicamente SELV, con SSR/contactores externos; o
+      - SSR de PCB reales, con referencia exacta, datasheet y footprint confirmado.
+
+     Para este proyecto recomiendo la primera.
+
+  6. Falta decidir cómo se alimentará el NodeMCU.
+
+     No aparece una fuente AC/DC aislada y certificada en el BOM ni en el esquema. Si se alimenta por USB externo, debe documentarse y conservarse físicamente el aislamiento respecto a la red. Si la fuente va dentro de la caja, su módulo, fusible, bornas, distancias y montaje son parte del diseño antes de rutear.
+
+  7. SSR y fusible se dan por decididos sin conocer la carga.
+
+     Los 6 (3,5) A de la etiqueta son el límite del contacto del termostato, no la corriente consumida por el equipo; el propio documento lo reconoce y después dimensiona como si fueran 6 A reales. Tampoco puede fijarse un fusible lento de 5 A sin conocer corriente permanente, suma de cargas simultáneas, sección de cable y protección aguas arriba.
+
+     Para motores, Omron recomienda medir corriente y duración de arranque, mantener el pico por debajo de la mitad de la capacidad de surge del SSR, añadir protección contra sobretensiones y prever que el fallo habitual del SSR deja la carga permanentemente encendida. Recomienda un contactor o breaker para corte seguro: precauciones oficiales de Omron.
+
+     La recomendación de comprar clones baratos “OK” debería eliminarse.
+
+  8. El firmware todavía no tiene comportamiento seguro.
+      - Ante fallo del DHT, thermostat/thermostat.ino:156 conserva el estado previo de las salidas. Un compresor o calefacción podría quedar encendido indefinidamente.
+      - Sin Wi‑Fi, queda bloqueado para siempre durante setup() en thermostat/thermostat.ino:89.
+      - Sin RTC, también queda bloqueado en thermostat/thermostat.ino:272.
+      - La salida de frío puede encenderse sin ventilador cuando la diferencia es menor de 3 °C.
+      - La temporización compartida se actualiza incluso al solicitar repetidamente un estado que ya estaba activo.
+      - Los endpoints forzados pueden dejar órdenes contradictorias.
+      - Los nombres frío/calor/ventilador no coinciden todavía con las funciones de los cables reales.
+
+     GPIO15 sí debe estar bajo durante el arranque, como indica la documentación oficial de Espressif, pero el pull-down de base no compensa el error del circuito SSR.
+
+  ## Otros problemas del documento
+
+  - DS1307 y DS3231 son compatibles a nivel I²C, pero no tienen necesariamente el mismo footprint. Primero hay que elegir el módulo exacto. Además, muchos módulos DS3231 usan CR2032/LIR2032, no CR1220.
+  - Hay que confirmar que uno de los OLED pueda configurarse como 0x3D; muchos módulos económicos vienen fijos en 0x3C.
+  - No deben añadirse pull-ups I²C sin comprobar las que ya llevan los dos OLED y el RTC: varias de 4,7 kΩ en paralelo pueden resultar demasiado fuertes.
+  - Fritzing y gerbv ya están instalados; el paso 1 no hace falta en esta máquina.
+  - Las capacidades de PCBWay sí admiten dos capas, 1,6 mm, 1 oz y HASL, pero eso solo acredita fabricabilidad: capacidades actuales de PCBWay.
+
+  ## Orden correcto recomendado
+
+  1. Identificar cada conductor del Eberle y su función mediante esquema del equipo y comprobaciones de un electricista cualificado.
+  2. Medir corrientes nominales y de arranque.
+  3. Elegir arquitectura, fuente aislada y dispositivos de conmutación con referencia y datasheet reales.
+  4. Corregir el firmware y probarlo exclusivamente en baja tensión.
+  5. Redibujar el esquema y PCB en KiCad; para 230 V ya no trataría KiCad como “Plan B”.
+  6. Ejecutar ERC/DRC, revisar Gerbers y hacer revisión eléctrica independiente.
+  7. Solo entonces cerrar BOM, fusible, disipación y pedido.
+
+  No he modificado ningún archivo ni realizado pruebas con tensión o cargas reales. PASOS_HASTA_PEDIDO.md sigue sin trackear y pending.md conserva la modificación local existente.
+

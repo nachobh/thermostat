@@ -1,0 +1,75 @@
+# Pick And Place List
+# Company=
+# Author=
+# eMail=
+#
+# Project=thermostat_universal
+# Date=08:32:04
+# CreatedBy=Fritzing 1.0.1rc.2025-04-04.debian/1.0.1-1+b6
+#
+#
+# Coordinates in mils, always center of component
+# Origin 0/0=Lower left corner of PCB
+# Rotation in degree (0-360, math. pos.)
+#
+RefDes,Description,Package,X,Y,Rotation,Side,Mount
+Description: resistance;capacitance;inductance;voltage;current;power;mpn;mn;
+C8,";100 uF;;10V;;;;;","100 mil [THT, electrolytic]",605,2609.79,0,Top,THT
+VIA_GND_ENTRY_8003,";;;;;;;;","THT",633.333,1603.67,0,Top,THT
+R17,"10k;;;;;0.25;;;","THT",2348.61,2116.23,0,Top,THT
+J4,";;;;;;;;","THT",2355.21,2490.49,0,Top,THT
+J8,";;;;;;;;","THT",1083.77,2490.49,0,Top,THT
+R16,"10k;;;;;0.25;;;","THT",1570.83,2060.67,0,Top,THT
+R10,"0;;;;;0.25;;;","THT",959.722,1782.9,0,Top,THT
+J2,";;;;;;;;","THT",1021.87,3690.49,0,Top,THT
+VIA_3V3_ENTRY_8009,";;;;;;;;","THT",1000,1903.67,0,Top,THT
+J12,";;;;;;;;","THT",3644.44,1155.21,0,Top,THT
+J13,";;;;;;;;","THT",3644.44,599.65,0,Top,THT
+R13,"0;;;;;0.25;;;","THT",1681.94,2394.01,0,Top,THT
+R6,"10k;;;;;0.25;;;","THT",2293.06,671.786,0,Top,THT
+J11,";;;;;;;;","THT",3644.44,1710.76,0,Top,THT
+C2,";100 nF;;;;;;;","100 mil [THT, multilayer]",3312.22,1230.34,0,Top,THT
+VIA_GND_LOGIC_8005,";;;;;;;;","THT",1433.33,2137.01,0,Top,THT
+VIA_3V3_ENTRY_8008,";;;;;;;;","THT",800,2337.01,0,Top,THT
+J10,";;;;;;;;","THT",2904.42,2490.49,0,Top,THT
+J6,";;;;;;;;","THT",2521.87,3046.04,0,Top,THT
+J3,";;;;;;;;","THT",355.206,3046.04,0,Top,THT
+R11,"0;;;;;0.25;;;","THT",959.722,1505.12,0,Top,THT
+J5,";;;;;;;;","THT",1744.09,3046.04,0,Top,THT
+VIA_GND_LOGIC_8004,";;;;;;;;","THT",866.667,1837.01,0,Top,THT
+VIA_5V_SSR_8015,";;;;;;;;","THT",1333.33,2903.67,0,Top,THT
+VIA_5V_SSR_8014,";;;;;;;;","THT",566.667,2870.34,0,Top,THT
+R14,"0;;;;;0.25;;;","THT",515.278,2449.56,0,Top,THT
+R8,"4.7k;;;;;0.25;;;","THT",2293.06,2282.9,0,Top,THT
+R9,"4.7k;;;;;0.25;;;","THT",1126.39,2171.79,0,Top,THT
+VIA_5V_SSR_8017,";;;;;;;;","THT",700,3437.01,0,Top,THT
+VIA_3V3_ENTRY_8012,";;;;;;;;","THT",1166.67,2337.01,0,Top,THT
+VIA_GND_ENTRY_8001,";;;;;;;;","THT",866.667,2537.01,0,Top,THT
+VIA_3V3_ENTRY_8011,";;;;;;;;","THT",566.667,1737.01,0,Top,THT
+J7,";;;;;;;;","THT",3299.65,3046.04,0,Top,THT
+C9,";100 nF;;;;;;;","100 mil [THT, multilayer]",256.667,2285.9,0,Top,THT
+C7,";100 nF;;;;;;;","100 mil [THT, multilayer]",256.667,2674.79,0,Top,THT
+VIA_3V3_ENTRY_8010,";;;;;;;;","THT",933.333,1070.34,0,Top,THT
+F1,";;;;;;;;","ptc",431.778,3428.56,0,Top,SMT
+R1,"1k;;;;;0.25;;;","THT",1515.28,1782.9,0,Top,THT
+VIA_GND_ENTRY_8002,";;;;;;;;","THT",933.333,1137.01,0,Top,THT
+J9,";;;;;;;;","THT",305.993,1934.93,0,Top,THT
+VIA_D7_COMP_8000,";;;;;;;;","THT",1066.67,1170.34,0,Top,THT
+Q1,";;;;;;;;","TO-92 THT",2976.64,1723.53,0,Top,THT
+C1,";100 nF;;;;;;;","100 mil [THT, multilayer]",3312.22,1785.9,0,Top,THT
+R12,"0;;;;;0.25;;;","THT",1515.28,2671.79,0,Top,THT
+C3,";100 nF;;;;;;;","100 mil [THT, multilayer]",3312.22,674.786,0,Top,THT
+R7,"4.7k;;;;;0.25;;;","THT",1626.39,2282.9,0,Top,THT
+R2,"10k;;;;;0.25;;;","THT",2293.06,1782.9,0,Top,THT
+R4,"10k;;;;;0.25;;;","THT",2293.06,1227.34,0,Top,THT
+VIA_GND_LOGIC_8006,";;;;;;;;","THT",1566.67,2470.34,0,Top,THT
+R15,"10k;;;;;0.25;;;","THT",2848.61,2116.23,0,Top,THT
+Q2,";;;;;;;;","TO-92 THT",2976.64,1167.98,0,Top,THT
+VIA_3V3_ENTRY_8007,";;;;;;;;","THT",633.333,2337.01,0,Top,THT
+C10,";47 uF;;10V;;;;;","100 mil [THT, electrolytic]",605,2220.9,0,Top,THT
+VIA_5V_SSR_8016,";;;;;;;;","THT",1566.67,2903.67,0,Top,THT
+Q3,";;;;;;;;","TO-92 THT",2976.64,612.423,0,Top,THT
+R3,"1k;;;;;0.25;;;","THT",1515.28,1227.34,0,Top,THT
+VIA_3V3_I2C_8013,";;;;;;;;","THT",1966.67,3003.67,0,Top,THT
+R5,"1k;;;;;0.25;;;","THT",1515.28,671.786,0,Top,THT
+J1,";;;;;;;;","THT",550.437,3690.49,0,Top,THT

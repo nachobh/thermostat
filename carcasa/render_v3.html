@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Termostato v3 – render 3D</title>
+<style>
+  html,body{margin:0;height:100%;background:#eef1f5;font-family:system-ui,sans-serif;color:#222}
+  #ui{position:fixed;top:10px;left:10px;display:flex;flex-wrap:wrap;gap:6px;max-width:calc(100% - 20px);z-index:2}
+  #ui button{border:1px solid #9aa;background:#fff;border-radius:6px;padding:6px 10px;font-size:13px;cursor:pointer}
+  #ui button.on{background:#1f5fbf;color:#fff;border-color:#1f5fbf}
+  #info{position:fixed;bottom:10px;left:10px;background:#fffd;border-radius:6px;padding:8px 12px;font-size:12px;line-height:1.5;z-index:2}
+  canvas{display:block}
+</style>
+</head>
+<body>
+<div id="ui"></div><div id="info"></div>
+<script src="three.min.js"></script>
+<script src="OrbitControls.js"></script>
+<script>
+window.onerror=(m,u,l)=>{document.body.insertAdjacentHTML('beforeend','<pre style="position:fixed;top:40px;left:10px;color:#b00;z-index:9;background:#fff">'+m+' @'+l+'</pre>')};
+const SCENE = {"Q": {"wall": 3.0, "inner": 106.0, "lid_t": 2.5, "depth": 61.0, "pcb": 100.0, "pcb_t": 1.6, "hole_off": 5.0, "hole_d": 3.0, "standoff": 6.0, "floor": 3.0, "zone": 14.0, "tray_z0": 25.0, "tray_t": 2.0, "pocket_y0": 15.0, "part_t": 3.0, "ssr_w": 18.5, "ssr_h": 24.6, "ssr_t": 4.2, "ssr_pin": 11.2, "hs_w": 24.0, "hs_h": 28.0, "hs_base": 2.5, "fin_h": 12.0, "n_fins": 5, "fin_t": 2.0, "ssr_x": [-34.0, -6.0, 22.0], "strip_x": 46.0, "node_l": 58.0, "node_w": 31.0, "node_h": 13.0, "oled_w": 27.3, "oled_h": 27.8, "oled_t": 4.0, "win_w": 24.0, "win_h": 13.0, "pot_body": 16.0, "pot_len": 10.0, "pot_hole": 7.0, "knob_d": 20.0, "knob_h": 15.0, "slot": 3.0, "pitch": 6.0, "outer": 112.0, "lid_in": 58.5, "pcb_z": 9.0, "pcb_top": 10.6, "zone_top": 24.6, "pocket_y1": 53.0, "part_y0": 12.0, "pocket_h": 38.0, "ssr_z0": 27.0, "hs_z0": 31.2, "fin_z0": 33.7, "fin_z1": 45.7, "ssr_yc": 39.0}, "FRONT": {"oled1": [-38.0, -3.0], "oled2": [-7.0, -3.0], "pot": [32.0, -3.0], "node": [21.0, -36.5], "dht": [-44.5, -36.5]}, "VENTS": {"top": [[-49.5, -46.5, 28.0, 50.0], [-43.5, -40.5, 28.0, 50.0], [-37.5, -34.5, 28.0, 50.0], [-31.5, -28.5, 28.0, 50.0], [-25.5, -22.5, 28.0, 50.0], [-19.5, -16.5, 28.0, 50.0], [-13.5, -10.5, 28.0, 50.0], [-7.5, -4.5, 28.0, 50.0], [-1.5, 1.5, 28.0, 50.0], [4.5, 7.5, 28.0, 50.0], [10.5, 13.5, 28.0, 50.0], [16.5, 19.5, 28.0, 50.0], [22.5, 25.5, 28.0, 50.0], [28.5, 31.5, 28.0, 50.0], [34.5, 37.5, 28.0, 50.0], [40.5, 43.5, 28.0, 50.0], [46.5, 49.5, 28.0, 50.0]], "lid_in": [[-49.5, -46.5, 23.0, 31.0], [-43.5, -40.5, 23.0, 31.0], [-37.5, -34.5, 23.0, 31.0], [-31.5, -28.5, 23.0, 31.0], [-25.5, -22.5, 23.0, 31.0], [-19.5, -16.5, 23.0, 31.0], [-13.5, -10.5, 23.0, 31.0], [-7.5, -4.5, 23.0, 31.0], [-1.5, 1.5, 23.0, 31.0], [4.5, 7.5, 23.0, 31.0], [10.5, 13.5, 23.0, 31.0], [16.5, 19.5, 23.0, 31.0], [22.5, 25.5, 23.0, 31.0], [28.5, 31.5, 23.0, 31.0], [34.5, 37.5, 23.0, 31.0], [40.5, 43.5, 23.0, 31.0], [46.5, 49.5, 23.0, 31.0]], "side_pow": [[28.5, 31.5, 17.0, 24.0], [34.5, 37.5, 17.0, 24.0], [40.5, 43.5, 17.0, 24.0], [46.5, 49.5, 17.0, 24.0]], "bottom_dht": [[-50.5, -47.5, 46.0, 58.0], [-44.5, -41.5, 46.0, 58.0], [-38.5, -35.5, 46.0, 58.0]], "side_dht": [[46.0, 49.0, -44.0, -29.0], [51.0, 54.0, -44.0, -29.0], [56.0, 59.0, -44.0, -29.0]]}, "AREAS": {"salida": 11.22, "entrada": 5.76, "dht": 2.43}, "parts": [{"ref": "J1", "x": 13.981, "y": 93.738, "t": "jst", "n": 3}, {"ref": "J8", "x": 27.528, "y": 63.258, "t": "jst", "n": 3}, {"ref": "J9", "x": 7.772, "y": 49.147, "t": "jst", "n": 3}, {"ref": "J2", "x": 25.955, "y": 93.738, "t": "jst", "n": 4}, {"ref": "J3", "x": 9.022, "y": 77.369, "t": "jst", "n": 4}, {"ref": "J4", "x": 59.822, "y": 63.258, "t": "jst", "n": 4}, {"ref": "J5", "x": 44.3, "y": 77.369, "t": "jst", "n": 4}, {"ref": "J6", "x": 64.055, "y": 77.369, "t": "jst", "n": 4}, {"ref": "J7", "x": 83.811, "y": 77.369, "t": "jst", "n": 4}, {"ref": "J10", "x": 73.772, "y": 63.258, "t": "jst", "n": 5}, {"ref": "J11", "x": 92.569, "y": 43.453, "t": "phoenix"}, {"ref": "J12", "x": 92.569, "y": 29.342, "t": "phoenix"}, {"ref": "J13", "x": 92.569, "y": 15.231, "t": "phoenix"}, {"ref": "F1", "x": 10.967, "y": 87.085, "t": "ptc"}, {"ref": "Q1", "x": 75.607, "y": 43.778, "t": "to92"}, {"ref": "Q2", "x": 75.607, "y": 29.667, "t": "to92"}, {"ref": "Q3", "x": 75.607, "y": 15.556, "t": "to92"}, {"ref": "R1", "x": 38.488, "y": 45.286, "t": "res"}, {"ref": "R3", "x": 38.488, "y": 31.174, "t": "res"}, {"ref": "R5", "x": 38.488, "y": 17.063, "t": "res"}, {"ref": "R2", "x": 58.244, "y": 45.286, "t": "res"}, {"ref": "R4", "x": 58.244, "y": 31.174, "t": "res"}, {"ref": "R6", "x": 58.244, "y": 17.063, "t": "res"}, {"ref": "R15", "x": 72.355, "y": 53.752, "t": "res"}, {"ref": "R16", "x": 39.899, "y": 52.341, "t": "res"}, {"ref": "R17", "x": 59.655, "y": 53.752, "t": "res"}, {"ref": "R10", "x": 24.377, "y": 45.286, "t": "res"}, {"ref": "R11", "x": 24.377, "y": 38.23, "t": "res"}, {"ref": "R12", "x": 38.488, "y": 67.863, "t": "res"}, {"ref": "R13", "x": 42.721, "y": 60.808, "t": "res"}, {"ref": "R14", "x": 13.088, "y": 62.219, "t": "res"}, {"ref": "C1", "x": 84.13, "y": 45.362, "t": "cer"}, {"ref": "C2", "x": 84.13, "y": 31.251, "t": "cer"}, {"ref": "C3", "x": 84.13, "y": 17.14, "t": "cer"}, {"ref": "C7", "x": 6.519, "y": 67.94, "t": "cer"}, {"ref": "C9", "x": 6.519, "y": 58.062, "t": "cer"}, {"ref": "C8", "x": 15.367, "y": 66.289, "t": "elec"}, {"ref": "C10", "x": 15.367, "y": 56.411, "t": "elec"}]};
+const Q = SCENE.Q, F = SCENE.FRONT, V = SCENE.VENTS, A = SCENE.AREAS;
+const q = new URLSearchParams(location.hash.slice(1));
+const state = { case: q.get('case')||'solid', view: q.get('view')||'iso', explode: parseFloat(q.get('explode')||'0'), ui: q.get('ui')!=='0' };
+
+const renderer = new THREE.WebGLRenderer({antialias:true, preserveDrawingBuffer:true});
+renderer.setPixelRatio(1); renderer.setSize(innerWidth, innerHeight); renderer.setClearColor(0xeef1f5);
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(32, innerWidth/innerHeight, 1, 4000);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8899aa, 0.55));
+const sun = new THREE.DirectionalLight(0xffffff, 0.55); sun.position.set(200, 320, 400); scene.add(sun);
+const fill = new THREE.DirectionalLight(0xffffff, 0.3); fill.position.set(-300, -80, 200); scene.add(fill);
+
+const M = (c, o={}) => new THREE.MeshStandardMaterial(Object.assign({color:c, roughness:0.6, metalness:0.05, side:THREE.DoubleSide}, o));
+function box(w,h,d,mat,x,y,z,parent){ const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat); m.position.set(x,y,z); parent.add(m); return m; }
+function cyl(r,len,mat,x,y,z,axis,parent,seg=32){ const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,len,seg),mat);
+  if(axis==='z') m.rotation.x=Math.PI/2; else if(axis==='x') m.rotation.z=Math.PI/2; m.position.set(x,y,z); parent.add(m); return m; }
+const XY = new THREE.Matrix4().makeBasis(new THREE.Vector3(1,0,0), new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,1));
+const XZ = new THREE.Matrix4().makeBasis(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,1), new THREE.Vector3(0,1,0));
+const YZ = new THREE.Matrix4().makeBasis(new THREE.Vector3(0,0,1), new THREE.Vector3(0,1,0), new THREE.Vector3(1,0,0));
+function plate(basis,u0,u1,v0,v1,t,holes,mat,x,y,z,parent,circles=[]){
+  const sh=new THREE.Shape(); sh.moveTo(u0,v0); sh.lineTo(u1,v0); sh.lineTo(u1,v1); sh.lineTo(u0,v1); sh.closePath();
+  holes.forEach(h=>{const p=new THREE.Path(); p.moveTo(h[0],h[2]); p.lineTo(h[0],h[3]); p.lineTo(h[1],h[3]); p.lineTo(h[1],h[2]); p.closePath(); sh.holes.push(p);});
+  circles.forEach(c=>{const p=new THREE.Path(); p.absarc(c[0],c[1],c[2],0,Math.PI*2,true); sh.holes.push(p);});
+  const g=new THREE.ExtrudeGeometry(sh,{depth:t,bevelEnabled:false}); g.applyMatrix4(basis);
+  const m=new THREE.Mesh(g,mat); m.position.set(x,y,z); parent.add(m); return m;
+}
+
+const gShell=new THREE.Group(), gPCB=new THREE.Group(), gPow=new THREE.Group(), gLid=new THREE.Group(), gMods=new THREE.Group();
+scene.add(gShell,gPCB,gPow,gLid,gMods);
+const HW=Q.outer/2, IW=Q.inner/2, W=Q.wall, Z=Q.lid_in;
+const glass = state.case==='glass';
+const COL0 = /^[0-9a-fA-F]{6}$/.test(q.get('color')||'') ? '#'+q.get('color') : '#b4bbc7';
+let curColor = COL0;
+const shMat = glass ? M(COL0,{transparent:true,opacity:0.25,depthWrite:false}) : M(COL0,{roughness:0.55});
+const lidMat = glass ? M(COL0,{transparent:true,opacity:0.25,depthWrite:false}) : M(COL0,{roughness:0.5});
+const barMat = M(0x6f747c,{roughness:0.6});
+
+/* ---------- caja ---------- */
+const [nx,ny] = F.node;
+plate(XY,-HW,HW,-HW,HW,W,[],shMat,0,0,0,gShell);                                                     // trasera
+plate(XZ,-HW,HW,0,Z,W,V.top,shMat,0,IW,0,gShell);                                                    // techo (salida de aire)
+plate(XZ,-HW,HW,0,Z,W,V.bottom_dht,shMat,0,-HW,0,gShell);                                            // suelo (DHT)
+plate(YZ,0,Z,-HW,HW,W,V.side_dht,shMat,-HW,0,0,gShell);                                              // lateral izq. (DHT)
+plate(YZ,0,Z,-HW,HW,W,V.side_pow.concat([[Z-8,Z,ny-6,ny+6]]),shMat,IW,0,0,gShell);                   // lateral dcha. (entrada + USB)
+[-1,1].forEach(sx=>[-1,1].forEach(sy=>{const h=Q.pcb/2-Q.hole_off;                                    // separadores M3 hasta la bandeja
+  cyl(3.0,Q.standoff,M(0xe0b050),sx*h,sy*h,Q.floor+Q.standoff/2,'z',gShell,24);
+  cyl(3.0,Q.tray_z0-Q.pcb_top,M(0xe0b050),sx*h,sy*h,Q.pcb_top+(Q.tray_z0-Q.pcb_top)/2,'z',gShell,24);
+  cyl(1.4,Q.tray_z0+3,M(0x888888,{metalness:0.8}),sx*h,sy*h,(Q.tray_z0+3)/2,'z',gShell,12);}));
+
+/* ---------- bolsa de 230 V: bandeja, partición, SSR ---------- */
+plate(XY,-IW,IW,Q.pocket_y0,IW,Q.tray_t,[],barMat,0,0,Q.tray_z0,gPow);                              // bandeja
+plate(XZ,-IW,IW,Q.tray_z0,Z,Q.part_t,[[20,30,28,34]],barMat,0,Q.part_y0,0,gPow);                      // partición + paso de mazo 5 V
+Q.ssr_x.forEach((xs)=>{
+  const yc=Q.ssr_yc;
+  box(Q.ssr_w,Q.ssr_h,Q.ssr_t,M(0x232323),xs,yc,Q.ssr_z0+Q.ssr_t/2,gPow);                              // S202S01
+  box(Q.ssr_w-4,8,0.4,M(0xc23030),xs,yc+4,Q.ssr_z0+0.05,gPow);
+  [-7.62,-2.54,5.08,7.62].forEach((dx,i)=>box(0.6,Q.ssr_pin,0.6,i<2?M(0xd33a3a,{metalness:0.6}):M(0x3a6ad3,{metalness:0.6}),xs+dx,yc-Q.ssr_h/2-Q.ssr_pin/2,Q.ssr_z0+2,gPow));   // 4 patillas: 1-2 salida 230 V, 3-4 entrada
+  box(Q.hs_w,Q.hs_h,Q.hs_base,M(0xaeb4bc,{metalness:0.5,roughness:0.4}),xs,yc,Q.hs_z0+Q.hs_base/2,gPow);
+  for(let k=0;k<Q.n_fins;k++) box(Q.fin_t,Q.hs_h,Q.fin_h,M(0xaeb4bc,{metalness:0.5,roughness:0.4}),xs-Q.hs_w/2+(k+0.5)*Q.hs_w/Q.n_fins,yc,Q.fin_z0+Q.fin_h/2,gPow);
+});
+box(8,25,12,M(0x4a8a3c),Q.strip_x,Q.ssr_yc,Q.ssr_z0+6,gPow);
+for(let i=0;i<5;i++) cyl(1.8,1,M(0xb9bec4,{metalness:0.8}),Q.strip_x,Q.ssr_yc-10+i*5,Q.ssr_z0+12.5,'z',gPow,16);
+
+/* ---------- PCB SELV ---------- */
+const zb=Q.pcb_z, zt=Q.pcb_top;
+box(Q.pcb,Q.pcb,Q.pcb_t,M(0x1f6b3a,{roughness:0.45}),0,0,zb+Q.pcb_t/2,gPCB);
+SCENE.parts.forEach(p=>{const x=p.x-50,y=p.y-50;
+  if(p.t==='jst'){const w=(p.n-1)*2.5+4.9; box(w,5.75,7,M(0xf2ecd9),x,y,zt+3.5,gPCB); box(w-1.6,3.2,0.3,M(0x3a3a3a),x,y,zt+7.05,gPCB);}
+  else if(p.t==='phoenix'){box(10.16,9.8,10.5,M(0x2f9a52),x,y,zt+5.25,gPCB); box(0.4,7,5,M(0x151515),x+5.0,y,zt+4.5,gPCB);}
+  else if(p.t==='res'){cyl(1.15,6.3,M(0xd9b97a),x,y,zt+1.4,'x',gPCB,16);}
+  else if(p.t==='elec'){cyl(2.5,11,M(0x1b1b1b),x,y,zt+5.5,'z',gPCB,24);}
+  else if(p.t==='cer'){box(5,2.5,6,M(0xe0a020),x,y,zt+3,gPCB);}
+  else if(p.t==='to92'){cyl(2.4,5,M(0x1a1a1a),x,y,zt+3.5,'z',gPCB,20);}
+  else if(p.t==='ptc'){box(7.4,3.8,9,M(0xe8d34a),x,y,zt+4.5,gPCB);}
+});
+
+/* ---------- tapa + módulos ---------- */
+const pocketSlots = V.lid_in;
+const holes = ['oled1','oled2'].map(k=>{const a=F[k][0], b=F[k][1]+3; return [a-Q.win_w/2,a+Q.win_w/2,b-Q.win_h/2,b+Q.win_h/2];}).concat(pocketSlots);
+plate(XY,-HW,HW,-HW,HW,Q.lid_t,holes,lidMat,0,0,Z,gLid,[[F.pot[0],F.pot[1],Q.pot_hole/2]]);
+function oledTexture(a,b){const c=document.createElement('canvas');c.width=256;c.height=128;const g=c.getContext('2d');g.fillStyle='#04070b';g.fillRect(0,0,256,128);
+  g.fillStyle='#9fe8ff';g.font='bold 56px monospace';g.fillText(a,14,62);g.font='28px monospace';g.fillText(b,14,108);return new THREE.CanvasTexture(c);}
+[['oled1','22.5°C','HEAT  AUTO'],['oled2','45 %RH','WiFi OK']].forEach(([k,a,b])=>{
+  const [x,y]=F[k];
+  box(Q.oled_w,Q.oled_h,1.2,M(0x151a30),x,y,Z-4+0.6,gMods);
+  box(26.7,19.3,1.4,M(0x0a0a0a),x,y+3,Z-2.8+0.7,gMods);
+  const act=new THREE.Mesh(new THREE.PlaneGeometry(21.74,10.86),new THREE.MeshBasicMaterial({map:oledTexture(a,b)})); act.position.set(x,y+3,Z-1.4+0.02); gMods.add(act);
+});
+{ const zB=Z-3.0-0.8;                                                           // NodeMCU con USB a la derecha
+  box(Q.node_l,Q.node_w,1.6,M(0x1b2f78,{roughness:0.4}),nx,ny,zB,gMods);
+  box(16,12,3,M(0xc8ccd2,{metalness:0.8,roughness:0.3}),nx-6,ny,zB+2.3,gMods);
+  box(11,11,0.4,M(0xd9b24a),nx-21,ny,zB+1.0,gMods);
+  box(8,6,2.8,M(0xb9bec4,{metalness:0.85,roughness:0.3}),nx+25,ny,zB+2.2,gMods);
+  [-1,1].forEach(s=>box(38.1,2.5,8.4,M(0x151515),nx+2,ny+s*11.43,zB-5,gMods)); }
+{ const [x,y]=F.dht;                                                            // DHT22 a la izquierda del NodeMCU
+  box(15.1,25.1,1.6,M(0x2c4f9a),x,y,Z-1.0,gMods);
+  box(15.1,20,7.7,M(0xf2f2f2),x,y-1.5,Z-1.8-3.85,gMods);
+  for(let i=0;i<3;i++) box(0.8,0.8,5,M(0xcccccc,{metalness:0.8}),x-2.54+i*2.54,y-12.5,Z-6,gMods);
+  box(1.5,31,Z-40,M(0x9fc4e8,{transparent:true,opacity:0.45,depthWrite:false}),-35.5,ny,40+(Z-40)/2,gMods); }   // deflector térmico
+{ const [x,y]=F.pot;
+  cyl(Q.pot_body/2,Q.pot_len,M(0x8a8f96,{metalness:0.4}),x,y,Z-Q.pot_len/2,'z',gMods,32);
+  cyl(Q.pot_hole/2-0.1,Q.lid_t+3,M(0xb9bec4,{metalness:0.85}),x,y,Z+(Q.lid_t+3)/2-0.5,'z',gMods,24);
+  cyl(Q.knob_d/2,Q.knob_h-1,M(0x2b2f36,{roughness:0.5}),x,y,Z+Q.lid_t+1+(Q.knob_h-1)/2,'z',gMods,48);
+  box(1.2,Q.knob_d/2-3,0.4,M(0xffffff),x,y+Q.knob_d/4+1,Z+Q.lid_t+Q.knob_h+0.1,gMods); }
+
+/* ---------- visibilidad / despiece / cámara ---------- */
+const e=state.explode;
+gShell.visible=gLid.visible=state.case!=='off';
+gLid.position.z=e*60; gMods.position.z=e*60; gPow.position.z=e*25; gPCB.position.z=0;
+const my=0, mz=(Q.depth+Q.knob_h)/2-8;
+const views={ iso:[190,150,300], front:[0,0,520], side:[520,0,mz], back:[-200,160,-320] };
+function setView(v){const a=views[v]||views.iso; const k=(v==='iso'&&e)?1.4:1;
+  camera.position.set(a[0]*k,a[1]*k,mz+(a[2]-mz)*k); camera.up.set(0,1,0); controls.target.set(0,my,mz); controls.update();}
+function loop(){requestAnimationFrame(loop);renderer.render(scene,camera);}
+addEventListener('resize',()=>{renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();});
+setView(state.view); renderer.render(scene,camera); loop();
+if(q.get('snap')==='1'){const im=new Image(); im.style.cssText='position:fixed;inset:0;width:100%;height:100%'; im.src=renderer.domElement.toDataURL('image/png'); document.body.appendChild(im);}
+function applyColor(c){ shMat.color.set(c); if(typeof lidMat!=='undefined') lidMat.color.set(c); }
+function apply(next){location.hash=new URLSearchParams({case:state.case,view:state.view,explode:state.explode,color:curColor.slice(1),...next}).toString();location.reload();}
+if(state.ui){const ui=document.getElementById('ui');
+  const btn=(l,on,f)=>{const b=document.createElement('button');b.textContent=l;if(on)b.className='on';b.onclick=f;ui.appendChild(b);};
+  btn('Con carcasa',state.case==='solid',()=>apply({case:'solid'})); btn('Carcasa transparente',glass,()=>apply({case:'glass'})); btn('Sin carcasa',state.case==='off',()=>apply({case:'off'}));
+  btn('Despiece',e>0,()=>apply({explode:e>0?0:1}));
+  ['iso','front','side','back'].forEach(v=>btn({iso:'Isométrica',front:'Frontal',side:'Lateral',back:'Trasera'}[v],state.view===v,()=>apply({view:v})));
+  { const box=document.createElement('div'); box.style.cssText='display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #9aa;border-radius:6px;padding:4px 10px;font-size:13px';
+    const inp=document.createElement('input'); inp.type='color'; inp.title='Color de la carcasa';
+    const sl=['R','G','B'].map(n=>{const r=document.createElement('input'); r.type='range'; r.min=0; r.max=255; r.style.width='64px'; r.title=n; return r;});
+    const hex=(r,g,b)=>'#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
+    function setCol(c){ curColor=c; applyColor(c); inp.value=c; const n=parseInt(c.slice(1),16); sl[0].value=(n>>16)&255; sl[1].value=(n>>8)&255; sl[2].value=n&255;
+      try{ history.replaceState(null,'','#'+new URLSearchParams({case:state.case,view:state.view,explode:state.explode,color:c.slice(1)}).toString()); }catch(e){} }
+    inp.oninput=()=>setCol(inp.value); sl.forEach(r=>r.oninput=()=>setCol(hex(+sl[0].value,+sl[1].value,+sl[2].value)));
+    box.append('Color carcasa ',inp,' R',sl[0],' G',sl[1],' B',sl[2]); ui.appendChild(box); setCol(curColor); }
+}
+document.getElementById('info').innerHTML=`<b>Caja ${Q.outer}×${Q.outer}×${Q.depth} mm</b> (+${Q.knob_h} del mando) · bolsa 230 V arriba, SELV abajo<br>Rendijas: salida ${A.salida.toFixed(0)} cm² · entrada ${A.entrada.toFixed(0)} cm² · DHT ${A.dht.toFixed(1)} cm²<br>SSR S202S01 18×24×4, disipador, DHT, NodeMCU y OLED: medidas supuestas`;
+if(!state.ui) document.getElementById('info').style.display='none';
+</script>
+</body>
+</html>

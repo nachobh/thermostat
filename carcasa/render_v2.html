@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Termostato v2 – render 3D</title>
+<style>
+  html,body{margin:0;height:100%;background:#eef1f5;font-family:system-ui,sans-serif;color:#222}
+  #ui{position:fixed;top:10px;left:10px;display:flex;flex-wrap:wrap;gap:6px;max-width:calc(100% - 20px);z-index:2}
+  #ui button{border:1px solid #9aa;background:#fff;border-radius:6px;padding:6px 10px;font-size:13px;cursor:pointer}
+  #ui button.on{background:#1f5fbf;color:#fff;border-color:#1f5fbf}
+  #info{position:fixed;bottom:10px;left:10px;background:#fffd;border-radius:6px;padding:8px 12px;font-size:12px;line-height:1.5;z-index:2}
+  canvas{display:block}
+</style>
+</head>
+<body>
+<div id="ui"></div><div id="info"></div>
+<script src="three.min.js"></script>
+<script src="OrbitControls.js"></script>
+<script>
+window.onerror=(m,u,l)=>{document.body.insertAdjacentHTML('beforeend','<pre style="position:fixed;top:40px;left:10px;color:#b00;z-index:9;background:#fff">'+m+' @'+l+'</pre>')};
+const SCENE = {"Q": {"wall": 3.0, "bar": 3.0, "w_in": 172.0, "h_selv": 106.0, "h_pow": 136.0, "fin_gap": 8.0, "fin_h": 25.0, "base_t": 4.0, "ssr_h": 23.0, "cover_gap": 10.0, "lid_t": 2.5, "ssr_l": 62.0, "ssr_w": 45.0, "hs_w": 50.0, "hs_h": 100.0, "n_fins": 9, "fin_t": 2.0, "ssr_x": [-55.0, 0.0, 55.0], "ssr_names": ["COMP J11", "CALOR J12", "VENT J13"], "strip_bottom": 22.0, "strip_top": 14.0, "pcb": 100.0, "pcb_t": 1.6, "hole_off": 5.0, "hole_d": 3.0, "standoff": 6.0, "floor": 3.0, "zone": 14.0, "node_l": 58.0, "node_w": 31.0, "node_h": 13.0, "oled_w": 27.3, "oled_h": 27.8, "oled_t": 4.0, "win_w": 24.0, "win_h": 13.0, "pot_body": 16.0, "pot_len": 10.0, "pot_hole": 7.0, "knob_d": 20.0, "knob_h": 15.0, "cluster_x": -33.0, "dht_box": [26.0, 84.0, 3.0, 45.0], "slot": 3.0, "pitch": 7.0, "w_out": 178.0, "h_out": 251.0, "y_bar0": 109.0, "y_pow0": 112.0, "y_pow1": 248.0, "z_hs0": 8.0, "z_base0": 33.0, "z_ssr0": 37.0, "lid_in": 70.0, "depth": 72.5, "y_hs0": 134.0, "y_hs1": 234.0, "cluster_y": 56.0, "pcb_z": 9.0}, "FRONT": {"oled1": [-17.0, 28.0], "oled2": [17.0, 28.0], "pot": [0.0, 0.0], "node": [0.0, -34.0]}, "VENTS": {"top": [[-79.5, -76.5, 8.0, 60.0], [-72.5, -69.5, 8.0, 60.0], [-65.5, -62.5, 8.0, 60.0], [-58.5, -55.5, 8.0, 60.0], [-51.5, -48.5, 8.0, 60.0], [-44.5, -41.5, 8.0, 60.0], [-37.5, -34.5, 8.0, 60.0], [-30.5, -27.5, 8.0, 60.0], [-23.5, -20.5, 8.0, 60.0], [-16.5, -13.5, 8.0, 60.0], [-9.5, -6.5, 8.0, 60.0], [-2.5, 0.5, 8.0, 60.0], [4.5, 7.5, 8.0, 60.0], [11.5, 14.5, 8.0, 60.0], [18.5, 21.5, 8.0, 60.0], [25.5, 28.5, 8.0, 60.0], [32.5, 35.5, 8.0, 60.0], [39.5, 42.5, 8.0, 60.0], [46.5, 49.5, 8.0, 60.0], [53.5, 56.5, 8.0, 60.0], [60.5, 63.5, 8.0, 60.0], [67.5, 70.5, 8.0, 60.0], [74.5, 77.5, 8.0, 60.0]], "cover_out": [[-79.5, -76.5, 236.0, 246.0], [-72.5, -69.5, 236.0, 246.0], [-65.5, -62.5, 236.0, 246.0], [-58.5, -55.5, 236.0, 246.0], [-51.5, -48.5, 236.0, 246.0], [-44.5, -41.5, 236.0, 246.0], [-37.5, -34.5, 236.0, 246.0], [-30.5, -27.5, 236.0, 246.0], [-23.5, -20.5, 236.0, 246.0], [-16.5, -13.5, 236.0, 246.0], [-9.5, -6.5, 236.0, 246.0], [-2.5, 0.5, 236.0, 246.0], [4.5, 7.5, 236.0, 246.0], [11.5, 14.5, 236.0, 246.0], [18.5, 21.5, 236.0, 246.0], [25.5, 28.5, 236.0, 246.0], [32.5, 35.5, 236.0, 246.0], [39.5, 42.5, 236.0, 246.0], [46.5, 49.5, 236.0, 246.0], [53.5, 56.5, 236.0, 246.0], [60.5, 63.5, 236.0, 246.0], [67.5, 70.5, 236.0, 246.0], [74.5, 77.5, 236.0, 246.0]], "cover_in": [[-79.5, -76.5, 114.0, 132.0], [-72.5, -69.5, 114.0, 132.0], [-65.5, -62.5, 114.0, 132.0], [-58.5, -55.5, 114.0, 132.0], [-51.5, -48.5, 114.0, 132.0], [-44.5, -41.5, 114.0, 132.0], [-37.5, -34.5, 114.0, 132.0], [-30.5, -27.5, 114.0, 132.0], [-23.5, -20.5, 114.0, 132.0], [-16.5, -13.5, 114.0, 132.0], [-9.5, -6.5, 114.0, 132.0], [-2.5, 0.5, 114.0, 132.0], [4.5, 7.5, 114.0, 132.0], [11.5, 14.5, 114.0, 132.0], [18.5, 21.5, 114.0, 132.0], [25.5, 28.5, 114.0, 132.0], [32.5, 35.5, 114.0, 132.0], [39.5, 42.5, 114.0, 132.0], [46.5, 49.5, 114.0, 132.0], [53.5, 56.5, 114.0, 132.0], [60.5, 63.5, 114.0, 132.0], [67.5, 70.5, 114.0, 132.0], [74.5, 77.5, 114.0, 132.0]], "side_pow": [[8.5, 11.5, 114.0, 132.0], [15.5, 18.5, 114.0, 132.0], [22.5, 25.5, 114.0, 132.0], [29.5, 32.5, 114.0, 132.0], [36.5, 39.5, 114.0, 132.0], [43.5, 46.5, 114.0, 132.0], [50.5, 53.5, 114.0, 132.0], [57.5, 60.5, 114.0, 132.0], [64.5, 67.5, 114.0, 132.0]], "bottom_dht": [[34.5, 37.5, 8.0, 40.0], [41.5, 44.5, 8.0, 40.0], [48.5, 51.5, 8.0, 40.0], [55.5, 58.5, 8.0, 40.0], [62.5, 65.5, 8.0, 40.0], [69.5, 72.5, 8.0, 40.0], [76.5, 79.5, 8.0, 40.0]], "bottom_selv": [[-71.5, -68.5, 8.0, 40.0], [-64.5, -61.5, 8.0, 40.0], [-57.5, -54.5, 8.0, 40.0], [-50.5, -47.5, 8.0, 40.0], [-43.5, -40.5, 8.0, 40.0], [-36.5, -33.5, 8.0, 40.0]], "side_dht": [[8.5, 11.5, 8.0, 40.0], [15.5, 18.5, 8.0, 40.0], [22.5, 25.5, 8.0, 40.0], [29.5, 32.5, 8.0, 40.0], [36.5, 39.5, 8.0, 40.0], [43.5, 46.5, 8.0, 40.0]]}, "AREAS": {"salida": 42.78, "entrada": 22.14, "dht": 12.48, "selv": 5.76}, "parts": [{"ref": "J1", "x": 13.981, "y": 93.738, "t": "jst", "n": 3}, {"ref": "J8", "x": 27.528, "y": 63.258, "t": "jst", "n": 3}, {"ref": "J9", "x": 7.772, "y": 49.147, "t": "jst", "n": 3}, {"ref": "J2", "x": 25.955, "y": 93.738, "t": "jst", "n": 4}, {"ref": "J3", "x": 9.022, "y": 77.369, "t": "jst", "n": 4}, {"ref": "J4", "x": 59.822, "y": 63.258, "t": "jst", "n": 4}, {"ref": "J5", "x": 44.3, "y": 77.369, "t": "jst", "n": 4}, {"ref": "J6", "x": 64.055, "y": 77.369, "t": "jst", "n": 4}, {"ref": "J7", "x": 83.811, "y": 77.369, "t": "jst", "n": 4}, {"ref": "J10", "x": 73.772, "y": 63.258, "t": "jst", "n": 5}, {"ref": "J11", "x": 92.569, "y": 43.453, "t": "phoenix"}, {"ref": "J12", "x": 92.569, "y": 29.342, "t": "phoenix"}, {"ref": "J13", "x": 92.569, "y": 15.231, "t": "phoenix"}, {"ref": "F1", "x": 10.967, "y": 87.085, "t": "ptc"}, {"ref": "Q1", "x": 75.607, "y": 43.778, "t": "to92"}, {"ref": "Q2", "x": 75.607, "y": 29.667, "t": "to92"}, {"ref": "Q3", "x": 75.607, "y": 15.556, "t": "to92"}, {"ref": "R1", "x": 38.488, "y": 45.286, "t": "res"}, {"ref": "R3", "x": 38.488, "y": 31.174, "t": "res"}, {"ref": "R5", "x": 38.488, "y": 17.063, "t": "res"}, {"ref": "R2", "x": 58.244, "y": 45.286, "t": "res"}, {"ref": "R4", "x": 58.244, "y": 31.174, "t": "res"}, {"ref": "R6", "x": 58.244, "y": 17.063, "t": "res"}, {"ref": "R15", "x": 72.355, "y": 53.752, "t": "res"}, {"ref": "R16", "x": 39.899, "y": 52.341, "t": "res"}, {"ref": "R17", "x": 59.655, "y": 53.752, "t": "res"}, {"ref": "R10", "x": 24.377, "y": 45.286, "t": "res"}, {"ref": "R11", "x": 24.377, "y": 38.23, "t": "res"}, {"ref": "R12", "x": 38.488, "y": 67.863, "t": "res"}, {"ref": "R13", "x": 42.721, "y": 60.808, "t": "res"}, {"ref": "R14", "x": 13.088, "y": 62.219, "t": "res"}, {"ref": "C1", "x": 84.13, "y": 45.362, "t": "cer"}, {"ref": "C2", "x": 84.13, "y": 31.251, "t": "cer"}, {"ref": "C3", "x": 84.13, "y": 17.14, "t": "cer"}, {"ref": "C7", "x": 6.519, "y": 67.94, "t": "cer"}, {"ref": "C9", "x": 6.519, "y": 58.062, "t": "cer"}, {"ref": "C8", "x": 15.367, "y": 66.289, "t": "elec"}, {"ref": "C10", "x": 15.367, "y": 56.411, "t": "elec"}]};
+const Q = SCENE.Q, F = SCENE.FRONT, V = SCENE.VENTS, A = SCENE.AREAS;
+const q = new URLSearchParams(location.hash.slice(1));
+const state = { case: q.get('case')||'solid', view: q.get('view')||'iso', explode: parseFloat(q.get('explode')||'0'), ui: q.get('ui')!=='0' };
+
+const renderer = new THREE.WebGLRenderer({antialias:true, preserveDrawingBuffer:true});
+renderer.setPixelRatio(1); renderer.setSize(innerWidth, innerHeight); renderer.setClearColor(0xeef1f5);
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(32, innerWidth/innerHeight, 1, 4000);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8899aa, 0.55));
+const sun = new THREE.DirectionalLight(0xffffff, 0.55); sun.position.set(200, 320, 400); scene.add(sun);
+const fill = new THREE.DirectionalLight(0xffffff, 0.3); fill.position.set(-300, -80, 200); scene.add(fill);
+
+const M = (c, o={}) => new THREE.MeshStandardMaterial(Object.assign({color:c, roughness:0.6, metalness:0.05, side:THREE.DoubleSide}, o));
+function box(w,h,d,mat,x,y,z,parent){ const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat); m.position.set(x,y,z); parent.add(m); return m; }
+function cyl(r,len,mat,x,y,z,axis,parent,seg=32){ const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,len,seg),mat);
+  if(axis==='z') m.rotation.x=Math.PI/2; else if(axis==='x') m.rotation.z=Math.PI/2; m.position.set(x,y,z); parent.add(m); return m; }
+const XY = new THREE.Matrix4().makeBasis(new THREE.Vector3(1,0,0), new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,1));
+const XZ = new THREE.Matrix4().makeBasis(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,1), new THREE.Vector3(0,1,0));
+const YZ = new THREE.Matrix4().makeBasis(new THREE.Vector3(0,0,1), new THREE.Vector3(0,1,0), new THREE.Vector3(1,0,0));
+function plate(basis,u0,u1,v0,v1,t,holes,mat,x,y,z,parent,circles=[]){
+  const sh=new THREE.Shape(); sh.moveTo(u0,v0); sh.lineTo(u1,v0); sh.lineTo(u1,v1); sh.lineTo(u0,v1); sh.closePath();
+  holes.forEach(h=>{const p=new THREE.Path(); p.moveTo(h[0],h[2]); p.lineTo(h[0],h[3]); p.lineTo(h[1],h[3]); p.lineTo(h[1],h[2]); p.closePath(); sh.holes.push(p);});
+  circles.forEach(c=>{const p=new THREE.Path(); p.absarc(c[0],c[1],c[2],0,Math.PI*2,true); sh.holes.push(p);});
+  const g=new THREE.ExtrudeGeometry(sh,{depth:t,bevelEnabled:false}); g.applyMatrix4(basis);
+  const m=new THREE.Mesh(g,mat); m.position.set(x,y,z); parent.add(m); return m;
+}
+
+const gShell=new THREE.Group(), gPCB=new THREE.Group(), gPow=new THREE.Group(), gLid=new THREE.Group(), gCover=new THREE.Group(), gMods=new THREE.Group();
+scene.add(gShell,gPCB,gPow,gLid,gCover,gMods);
+const HW = Q.w_out/2, IW = Q.w_in/2, Z = Q.lid_in;
+
+/* ---------- caja ---------- */
+const glass = state.case==='glass';
+const COL0 = /^[0-9a-fA-F]{6}$/.test(q.get('color')||'') ? '#'+q.get('color') : '#b4bbc7';
+let curColor = COL0;
+const shMat = glass ? M(COL0,{transparent:true,opacity:0.25,depthWrite:false}) : M(COL0,{roughness:0.55});
+const lidMat = glass ? M(COL0,{transparent:true,opacity:0.25,depthWrite:false}) : M(COL0,{roughness:0.5});
+const barMat = M(0x777c85,{roughness:0.6});
+const yN = Q.cluster_y + F.node[1];
+plate(XY,-HW,HW,0,Q.h_out,Q.wall,[],shMat,0,0,0,gShell);                                           // trasera
+plate(XZ,-HW,HW,0,Z,Q.wall,V.top,shMat,0,Q.h_out-Q.wall,0,gShell);                                // techo con rendijas
+plate(XZ,-HW,HW,0,Z,Q.wall,V.bottom_dht.concat(V.bottom_selv),shMat,0,0,0,gShell);                  // suelo con rendijas
+plate(XZ,-IW,IW,0,Z,Q.bar,[[8,22,36,42]],barMat,0,Q.y_bar0,0,gShell);                               // barrera + paso de mazo
+plate(YZ,0,Z,0,Q.h_out,Q.wall,V.side_pow.concat([[Z-8,Z,yN-6,yN+6]]),shMat,-HW,0,0,gShell);        // lateral izq. (+USB)
+plate(YZ,0,Z,0,Q.h_out,Q.wall,V.side_pow.concat(V.side_dht),shMat,IW,0,0,gShell);                  // lateral der.
+// raíl/pedestales de bornas de red y fusible
+const yS = Q.y_pow0 + 24;
+[-72,72].forEach(x=>box(6,6,33,M(0x888888),x,yS,3+16.5,gPow));
+box(150,18,3,M(0x666b73),0,yS,37.5,gPow);
+box(40,12,14,M(0x4a8a3c),-42,yS,39+7,gPow); for(let i=0;i<5;i++) cyl(2.2,1,M(0xb9bec4,{metalness:0.8}),-42-16+i*8,yS,46.6,'z',gPow,16);
+box(34,12,14,M(0xd8c070),47,yS,39+7,gPow); cyl(4,16,M(0x2a2a2a),47,yS,53.5,'z',gPow,20);
+/* ---------- SSR + disipadores ---------- */
+const yc = (Q.y_hs0+Q.y_hs1)/2;
+Q.ssr_x.forEach((xs,i)=>{
+  box(Q.hs_w,Q.hs_h,Q.base_t,M(0xaeb4bc,{metalness:0.5,roughness:0.4}),xs,yc,Q.z_base0+Q.base_t/2,gPow);
+  for(let k=0;k<Q.n_fins;k++) box(Q.fin_t,Q.hs_h,Q.fin_h,M(0xaeb4bc,{metalness:0.5,roughness:0.4}),xs-Q.hs_w/2+(k+0.5)*Q.hs_w/Q.n_fins,yc,Q.z_hs0+Q.fin_h/2,gPow);
+  [-1,1].forEach(sx=>[-1,1].forEach(sy=>cyl(3,Q.z_hs0-Q.wall+0.1,M(0xe0b050),xs+sx*20,yc+sy*40,Q.wall+(Q.z_hs0-Q.wall)/2,'z',gPow,16)));   // separadores a la trasera
+  box(Q.ssr_w,Q.ssr_l,Q.ssr_h,M(0x232323),xs,yc,Q.z_ssr0+Q.ssr_h/2,gPow);
+  box(Q.ssr_w-14,Q.ssr_l-30,0.4,M(0xc23030),xs,yc,Q.z_ssr0+Q.ssr_h+0.2,gPow);
+  [-1,1].forEach(s=>box(Q.ssr_w-8,9,7,M(0xc9ced4,{metalness:0.6}),xs,yc+s*(Q.ssr_l/2-7),Q.z_ssr0+Q.ssr_h+3.5,gPow));
+});
+/* ---------- PCB SELV ---------- */
+gPCB.position.set(Q.cluster_x, Q.cluster_y, 0);
+const zb=Q.pcb_z, zt=zb+Q.pcb_t;
+box(Q.pcb,Q.pcb,Q.pcb_t,M(0x1f6b3a,{roughness:0.45}),0,0,zb+Q.pcb_t/2,gPCB);
+[-1,1].forEach(sx=>[-1,1].forEach(sy=>{const h=Q.pcb/2-Q.hole_off;
+  cyl(3.0,Q.standoff,M(0xe0b050),sx*h,sy*h,Q.floor+Q.standoff/2,'z',gPCB,24);
+  cyl(1.4,Q.standoff+Q.pcb_t+3,M(0x888888,{metalness:0.8}),sx*h,sy*h,Q.floor+(Q.standoff+Q.pcb_t+3)/2,'z',gPCB,12);}));
+SCENE.parts.forEach(p=>{const x=p.x-50,y=p.y-50;
+  if(p.t==='jst'){const w=(p.n-1)*2.5+4.9; box(w,5.75,7,M(0xf2ecd9),x,y,zt+3.5,gPCB); box(w-1.6,3.2,0.3,M(0x3a3a3a),x,y,zt+7.05,gPCB);}
+  else if(p.t==='phoenix'){box(10.16,9.8,10.5,M(0x2f9a52),x,y,zt+5.25,gPCB); box(0.4,7,5,M(0x151515),x+5.0,y,zt+4.5,gPCB);}
+  else if(p.t==='res'){cyl(1.15,6.3,M(0xd9b97a),x,y,zt+1.4,'x',gPCB,16);}
+  else if(p.t==='elec'){cyl(2.5,11,M(0x1b1b1b),x,y,zt+5.5,'z',gPCB,24);}
+  else if(p.t==='cer'){box(5,2.5,6,M(0xe0a020),x,y,zt+3,gPCB);}
+  else if(p.t==='to92'){cyl(2.4,5,M(0x1a1a1a),x,y,zt+3.5,'z',gPCB,20);}
+  else if(p.t==='ptc'){box(7.4,3.8,9,M(0xe8d34a),x,y,zt+4.5,gPCB);}
+});
+/* ---------- cámara DHT ---------- */
+{ const [x0,x1,y0,y1]=Q.dht_box, w=x1-x0, h=y1-y0;
+  const pm = M(0x9fc4e8,{transparent:true,opacity:0.35,depthWrite:false});
+  box(w,1.5,Z-Q.wall,pm,(x0+x1)/2,y1,(Z+Q.wall)/2,gShell);   // partición superior
+  box(1.5,h,Z-Q.wall,pm,x0,(y0+y1)/2,(Z+Q.wall)/2,gShell);   // partición izquierda
+  box(15.1,25.1,1.6,M(0x2c4f9a),56,24,18,gMods);
+  box(15.1,20,7.7,M(0xf2f2f2),56,22,18+4.7,gMods);
+  for(let i=0;i<3;i++) box(1,1,6,M(0xcccccc,{metalness:0.8}),56-2.54+i*2.54,10,15,gMods);
+}
+/* ---------- tapa SELV (OLED, potenciómetro) y tapa de potencia ---------- */
+const cx=Q.cluster_x, cy=Q.cluster_y;
+const lidHoles = ['oled1','oled2'].map(k=>{const a=cx+F[k][0], b=cy+F[k][1]+3; return [a-Q.win_w/2,a+Q.win_w/2,b-Q.win_h/2,b+Q.win_h/2];});
+plate(XY,-HW,HW,0,Q.y_pow0,Q.lid_t,lidHoles,lidMat,0,0,Z,gLid,[[cx+F.pot[0],cy+F.pot[1],Q.pot_hole/2]]);
+plate(XY,-HW,HW,Q.y_pow0,Q.h_out,Q.lid_t,V.cover_out.concat(V.cover_in),lidMat,0,0,Z,gCover);
+function oledTexture(a,b){const c=document.createElement('canvas');c.width=256;c.height=128;const g=c.getContext('2d');g.fillStyle='#04070b';g.fillRect(0,0,256,128);
+  g.fillStyle='#9fe8ff';g.font='bold 56px monospace';g.fillText(a,14,62);g.font='28px monospace';g.fillText(b,14,108);return new THREE.CanvasTexture(c);}
+[['oled1','22.5°C','HEAT  AUTO'],['oled2','45 %RH','WiFi OK']].forEach(([k,a,b])=>{
+  const x=cx+F[k][0], y=cy+F[k][1];
+  box(Q.oled_w,Q.oled_h,1.2,M(0x151a30),x,y,Z-4+0.6,gMods);
+  box(26.7,19.3,1.4,M(0x0a0a0a),x,y+3,Z-2.8+0.7,gMods);
+  const act=new THREE.Mesh(new THREE.PlaneGeometry(21.74,10.86),new THREE.MeshBasicMaterial({map:oledTexture(a,b)})); act.position.set(x,y+3,Z-1.4+0.02); gMods.add(act);
+});
+{ const x=cx+F.node[0], y=cy+F.node[1], zB=Z-3.0-0.8;
+  box(Q.node_l,Q.node_w,1.6,M(0x1b2f78,{roughness:0.4}),x,y,zB,gMods);
+  box(16,12,3,M(0xc8ccd2,{metalness:0.8,roughness:0.3}),x+6,y,zB+2.3,gMods);
+  box(11,11,0.4,M(0xd9b24a),x+21,y,zB+1.0,gMods);
+  box(8,6,2.8,M(0xb9bec4,{metalness:0.85,roughness:0.3}),x-25,y,zB+2.2,gMods);
+  [-1,1].forEach(s=>box(38.1,2.5,8.4,M(0x151515),x-2,y+s*11.43,zB-5,gMods)); }
+{ const x=cx+F.pot[0], y=cy+F.pot[1];
+  cyl(Q.pot_body/2,Q.pot_len,M(0x8a8f96,{metalness:0.4}),x,y,Z-Q.pot_len/2,'z',gMods,32);
+  cyl(Q.pot_hole/2-0.1,Q.lid_t+3,M(0xb9bec4,{metalness:0.85}),x,y,Z+(Q.lid_t+3)/2-0.5,'z',gMods,24);
+  cyl(Q.knob_d/2,Q.knob_h-1,M(0x2b2f36,{roughness:0.5}),x,y,Z+Q.lid_t+1+(Q.knob_h-1)/2,'z',gMods,48);
+  box(1.2,Q.knob_d/2-3,0.4,M(0xffffff),x,y+Q.knob_d/4+1,Z+Q.lid_t+Q.knob_h+0.1,gMods); }
+
+/* ---------- visibilidad / despiece ---------- */
+const e=state.explode;
+gShell.visible=gLid.visible=gCover.visible=state.case!=='off';
+gLid.position.z=e*70; gMods.position.z=e*70; gCover.position.z=e*120; gPCB.position.z=e*20;
+/* ---------- cámara ---------- */
+const mx=0, my=Q.h_out/2, mz=(Q.depth+Q.knob_h)/2-10;
+const views={ iso:[300,330,520], front:[0,my,760], side:[760,my,mz], back:[-300,340,-560], top:[0,900,mz+120] };
+function setView(v){const a=views[v]||views.iso; const k=(v==='iso'&&e)?1.35:1;
+  camera.position.set(a[0]*k, v==='iso'?my+(a[1]-my)*k:a[1], a[2]*k); camera.up.set(0,1,0); controls.target.set(mx,my,mz); controls.update();}
+function loop(){requestAnimationFrame(loop);renderer.render(scene,camera);}
+addEventListener('resize',()=>{renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();});
+setView(state.view); renderer.render(scene,camera); loop();
+if(q.get('snap')==='1'){const im=new Image(); im.style.cssText='position:fixed;inset:0;width:100%;height:100%'; im.src=renderer.domElement.toDataURL('image/png'); document.body.appendChild(im);}
+function applyColor(c){ shMat.color.set(c); if(typeof lidMat!=='undefined') lidMat.color.set(c); }
+function apply(next){location.hash=new URLSearchParams({case:state.case,view:state.view,explode:state.explode,color:curColor.slice(1),...next}).toString();location.reload();}
+if(state.ui){const ui=document.getElementById('ui');
+  const btn=(l,on,f)=>{const b=document.createElement('button');b.textContent=l;if(on)b.className='on';b.onclick=f;ui.appendChild(b);};
+  btn('Con carcasa',state.case==='solid',()=>apply({case:'solid'})); btn('Carcasa transparente',glass,()=>apply({case:'glass'})); btn('Sin carcasa',state.case==='off',()=>apply({case:'off'}));
+  btn('Despiece',e>0,()=>apply({explode:e>0?0:1}));
+  ['iso','front','side','back'].forEach(v=>btn({iso:'Isométrica',front:'Frontal',side:'Lateral',back:'Trasera'}[v],state.view===v,()=>apply({view:v})));
+  { const box=document.createElement('div'); box.style.cssText='display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #9aa;border-radius:6px;padding:4px 10px;font-size:13px';
+    const inp=document.createElement('input'); inp.type='color'; inp.title='Color de la carcasa';
+    const sl=['R','G','B'].map(n=>{const r=document.createElement('input'); r.type='range'; r.min=0; r.max=255; r.style.width='64px'; r.title=n; return r;});
+    const hex=(r,g,b)=>'#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
+    function setCol(c){ curColor=c; applyColor(c); inp.value=c; const n=parseInt(c.slice(1),16); sl[0].value=(n>>16)&255; sl[1].value=(n>>8)&255; sl[2].value=n&255;
+      try{ history.replaceState(null,'','#'+new URLSearchParams({case:state.case,view:state.view,explode:state.explode,color:c.slice(1)}).toString()); }catch(e){} }
+    inp.oninput=()=>setCol(inp.value); sl.forEach(r=>r.oninput=()=>setCol(hex(+sl[0].value,+sl[1].value,+sl[2].value)));
+    box.append('Color carcasa ',inp,' R',sl[0],' G',sl[1],' B',sl[2]); ui.appendChild(box); setCol(curColor); }
+}
+document.getElementById('info').innerHTML=`<b>Caja ${Q.w_out}×${Q.h_out}×${Q.depth.toFixed(1)} mm</b> (+${Q.knob_h} del mando) · SELV abajo, 230 V arriba con barrera<br>Rendijas: salida ${A.salida.toFixed(0)} cm² · entrada ${A.entrada.toFixed(0)} cm² · cámara DHT ${A.dht.toFixed(0)} cm²<br>SSR, disipadores, DHT, NodeMCU y OLED con medidas supuestas`;
+if(!state.ui) document.getElementById('info').style.display='none';
+</script>
+</body>
+</html>

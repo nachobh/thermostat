@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Termostato v9 – render 3D</title>
+<style>
+  html,body{margin:0;height:100%;background:#eef1f5;font-family:system-ui,sans-serif;color:#222}
+  #ui{position:fixed;top:10px;left:10px;display:flex;flex-wrap:wrap;gap:6px;max-width:calc(100% - 20px);z-index:2}
+  #ui button{border:1px solid #9aa;background:#fff;border-radius:6px;padding:6px 10px;font-size:13px;cursor:pointer}
+  #ui button.on{background:#1f5fbf;color:#fff;border-color:#1f5fbf}
+  #info{position:fixed;bottom:10px;left:10px;background:#fffd;border-radius:6px;padding:8px 12px;font-size:12px;line-height:1.5;z-index:2}
+  canvas{display:block}
+</style>
+</head>
+<body>
+<div id="ui"></div><div id="info"></div>
+<img id="pcbimg" alt="" src="__PCB_TEXTURE__" style="display:none">
+<script src="three.min.js"></script>
+<script src="OrbitControls.js"></script>
+<script>
+window.onerror=(m,u,l)=>{document.body.insertAdjacentHTML('beforeend','<pre style="position:fixed;top:40px;left:10px;color:#b00;z-index:9;background:#fff">'+m+' @'+l+'</pre>')};
+const SCENE = __SCENE__;
+const Q = SCENE.Q;
+const q = new URLSearchParams(location.hash.slice(1));
+const state = { case: q.get('case')||'solid', view: q.get('view')||'iso', explode: parseFloat(q.get('explode')||'0'), ui: q.get('ui')!=='0' };
+const renderer = new THREE.WebGLRenderer({antialias:true, preserveDrawingBuffer:true});
+renderer.setPixelRatio(1); renderer.setSize(innerWidth, innerHeight); renderer.setClearColor(0xeef1f5);
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(32, innerWidth/innerHeight, 1, 5000);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8899aa, 0.55));
+const sun = new THREE.DirectionalLight(0xffffff, 0.55); sun.position.set(200, 320, 400); scene.add(sun);
+const fill = new THREE.DirectionalLight(0xffffff, 0.35); fill.position.set(-300, -80, -300); scene.add(fill);
+const M = (c, o={}) => new THREE.MeshStandardMaterial(Object.assign({color:c, roughness:0.6, metalness:0.05, side:THREE.DoubleSide}, o));
+function box(w,h,d,mat,x,y,z,parent){ const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat); m.position.set(x,y,z); parent.add(m); return m; }
+function cyl(r,len,mat,x,y,z,axis,parent,seg=32){ const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,len,seg),mat);
+  if(axis==='z') m.rotation.x=Math.PI/2; else if(axis==='x') m.rotation.z=Math.PI/2; m.position.set(x,y,z); parent.add(m); return m; }
+const XY = new THREE.Matrix4().makeBasis(new THREE.Vector3(1,0,0), new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,1));
+const XZ = new THREE.Matrix4().makeBasis(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,1), new THREE.Vector3(0,1,0));
+const YZ = new THREE.Matrix4().makeBasis(new THREE.Vector3(0,0,1), new THREE.Vector3(0,1,0), new THREE.Vector3(1,0,0));
+function plate(basis,u0,u1,v0,v1,t,holes,mat,x,y,z,parent,circles=[]){
+  const sh=new THREE.Shape(); sh.moveTo(u0,v0); sh.lineTo(u1,v0); sh.lineTo(u1,v1); sh.lineTo(u0,v1); sh.closePath();
+  holes.forEach(h=>{const p=new THREE.Path(); p.moveTo(h[0],h[2]); p.lineTo(h[0],h[3]); p.lineTo(h[1],h[3]); p.lineTo(h[1],h[2]); p.closePath(); sh.holes.push(p);});
+  circles.forEach(c=>{const p=new THREE.Path(); p.absarc(c[0],c[1],c[2],0,Math.PI*2,true); sh.holes.push(p);});
+  const g=new THREE.ExtrudeGeometry(sh,{depth:t,bevelEnabled:false}); g.applyMatrix4(basis);
+  const m=new THREE.Mesh(g,mat); m.position.set(x,y,z); parent.add(m); return m;
+}
+const gShell=new THREE.Group(), gBack=new THREE.Group(), gPCB=new THREE.Group(), gDisp=new THREE.Group();
+scene.add(gShell,gBack,gPCB,gDisp);
+const O=Q.outer/2, I=Q.inner/2, WL=Q.wall, FL=Q.floor, ZT=Q.depth, ZB=Q.pcb_back;
+const glass = state.case==='glass';
+const COL0 = /^[0-9a-fA-F]{6}$/.test(q.get('color')||'') ? '#'+q.get('color') : '#b4bbc7';
+let curColor = COL0;
+const shMat = glass ? M(COL0,{transparent:true,opacity:0.25,depthWrite:false}) : M(COL0,{roughness:0.55});
+const lidMat = glass ? M(COL0,{transparent:true,opacity:0.25,depthWrite:false}) : M(COL0,{roughness:0.55});
+const redMat = M(0xb03a3a,{roughness:0.6});
+/* ---------- marco: 4 paredes, repisa de la pantalla, ranura del cable, USB, cápsula DHT ---------- */
+const gx=Q.pod_x, ph=SCENE.pod_hole;
+plate(XZ,-O,O,0,ZT,WL,[],shMat,0,I,0,gShell);                                                   // pared superior
+plate(XZ,-O,O,0,ZT,WL,[],shMat,0,-O,0,gShell,[[gx,FL+Q.pod_h/2,ph[1]]]);                       // pared inferior (paso del cable del DHT)
+const U=SCENE.usb;
+plate(YZ,0,ZT,-I,I,WL,[[U.z0,U.z1,U.y-6,U.y+6]],shMat,I,0,0,gShell);                           // pared derecha (USB del NodeMCU)
+{ const G=SCENE.groove, gz0=ZB-9, gz1=Q.disp_back;                                             // pared izquierda con ranura interior
+  plate(YZ,0,ZT,-I,I,WL-Q.groove_d,[],shMat,-O,0,0,gShell);
+  plate(YZ,0,ZT,-I,I,Q.groove_d,[[gz0,gz1,G.y-Q.groove_w/2,G.y+Q.groove_w/2]],shMat,-O+WL-Q.groove_d,0,0,gShell); }
+const lz=Q.ledge_z0+Q.ledge_t/2, LW=Q.ledge_w;
+box(Q.inner,LW,Q.ledge_t,shMat,0,I-LW/2,lz,gShell); box(Q.inner,LW,Q.ledge_t,shMat,0,-I+LW/2,lz,gShell);
+box(LW,Q.inner-2*LW,Q.ledge_t,shMat,-I+LW/2,0,lz,gShell); box(LW,Q.inner-2*LW,Q.ledge_t,shMat,I-LW/2,0,lz,gShell);
+{ const pw=Q.pod_w/2, py0=-O-Q.pod_d, pz0=FL, pz1=FL+Q.pod_h, t=1.5;                           // cápsula DHT bajo la pared inferior
+  plate(XZ,gx-pw,gx+pw,pz0,pz1,t,SCENE.vents.pod.map(([a,b])=>[a,b,pz0+3,pz1-3]),shMat,0,py0,0,gShell);
+  plate(XY,gx-pw,gx+pw,py0,-O,t,[],shMat,0,0,pz0,gShell); plate(XY,gx-pw,gx+pw,py0,-O,t,SCENE.vents.pod.map(([a,b])=>[a,b,py0+3,-O-3]),shMat,0,0,pz1-t,gShell);
+  plate(YZ,pz0,pz1,py0,-O,t,[],shMat,gx-pw,0,0,gShell); plate(YZ,pz0,pz1,py0,-O,t,[],shMat,gx+pw-t,0,0,gShell);
+  box(25.1,Q.dht_t,15.1,M(0xf2f2f2),gx,py0+t+Q.dht_t/2+1,FL+Q.pod_h/2,gShell); }
+/* ---------- tapa trasera: fondo, borde, torretas, tabique 230 V / SELV ---------- */
+{ const H=SCENE.holes;
+  plate(XY,-I,I,-I,I,FL,[],lidMat,0,0,0,gBack,[[H.mains[0],H.mains[1],H.mains[2]],[H.selv[0],H.selv[1],H.selv[2]]]);
+  const R=Q.rim_w, rh=Q.rim_h;
+  box(Q.inner,R,rh,lidMat,0,I-R/2,FL+rh/2,gBack); box(Q.inner,R,rh,lidMat,0,-I+R/2,FL+rh/2,gBack);
+  box(R,Q.inner-2*R,rh,lidMat,-I+R/2,0,FL+rh/2,gBack); box(R,Q.inner-2*R,rh,lidMat,I-R/2,0,FL+rh/2,gBack);
+  SCENE.mounts.forEach(([x,y])=>cyl(Q.standoff_d/2,ZB-FL,M(0xd8d2c4),x,y,FL+(ZB-FL)/2,'z',gBack,24));
+  SCENE.partition.forEach(([a,b])=>box(b-a,Q.part_t,ZB-1-FL,redMat,(a+b)/2,SCENE.zone_y,FL+(ZB-1-FL)/2,gBack)); }
+/* ---------- PCB Rev B (componentes hacia atrás) ---------- */
+{ const pcbMat=M(0x1f6b3a,{roughness:0.45});
+  box(Q.pcb,Q.pcb,Q.pcb_t,pcbMat,0,0,ZB+Q.pcb_t/2,gPCB);
+  { const tex=new THREE.Texture(document.getElementById('pcbimg')); window.pcbTex=tex;
+    const face=new THREE.Mesh(new THREE.PlaneGeometry(Q.pcb,Q.pcb),new THREE.MeshStandardMaterial({map:tex,roughness:0.5}));
+    face.rotation.y=Math.PI; face.position.set(0,0,ZB-0.02); gPCB.add(face); }
+  const col={relay:0x2b4f9a,terminal:0x2f9a52,fuse:0x3a3a3a,cap:0x1b1b1b,jst:0xf2ecd9,smd:0x2a2a2a};
+  SCENE.parts.forEach(p=>{
+    if(p.t==='node'){
+      const rows=[-13.97,13.97], sx=p.x-0.78;
+      rows.forEach(dy=>box(38.1,2.5,8.5,M(0x151515),sx,p.y+dy,ZB-4.25,gPCB));
+      box(p.w,p.l,1.6,M(0x1b2f78,{roughness:0.4}),p.x,p.y,ZB-8.5-0.8,gPCB);
+      box(16,24,3.2,M(0xc8ccd2,{metalness:0.8,roughness:0.3}),p.x-17,p.y,ZB-10.1-1.6,gPCB);
+      box(6,8,3,M(0xb9bec4,{metalness:0.85}),p.x+p.w/2-3,p.y,ZB-10.1-1.5,gPCB);
+      return; }
+    if(p.t==='fuse'){ cyl(4.25,p.h,M(col.fuse),p.x,p.y,ZB-p.h/2,'z',gPCB,24); return; }
+    if(p.t==='cap'){ cyl(3.15,p.h,M(col.cap),p.x,p.y,ZB-p.h/2,'z',gPCB,24); return; }
+    const m=box(p.w,p.l,p.h,M(col[p.t]||0x999999,{roughness:0.45}),p.x,p.y,ZB-p.h/2,gPCB);
+    if(p.t==='relay') box(p.w-3,p.l-6,0.3,M(0xe8e8e8),p.x,p.y,ZB-p.h-0.1,gPCB);
+    if(p.t==='terminal'){ for(let i=0;i<p.n;i++) cyl(1.6,0.6,M(0xb9bec4,{metalness:0.8}),p.x-p.w/2+5.08*(i+0.5),p.y,ZB-p.h-0.3,'z',gPCB,16); }
+  });
+  // DWIN: cable plano de J2 a la pantalla, por la ranura de la pared
+  const J2=SCENE.parts.find(p=>p.ref==='J2'), G=SCENE.groove, xr=-I-Q.groove_d+0.6;
+  const flex=M(0xd9a400,{roughness:0.5});
+  box(Math.abs(J2.x-xr),5,0.6,flex,(J2.x+xr)/2,G.y,ZB-7.5,gPCB);
+  box(0.6,5,Q.disp_back-(ZB-7.5),flex,xr,G.y,(Q.disp_back+ZB-7.5)/2,gPCB); }
+/* ---------- pantalla DWIN 4" enrasada ---------- */
+function uiTexture(){const c=document.createElement('canvas');c.width=960;c.height=940;const g=c.getContext('2d');g.fillStyle='#0b1830';g.fillRect(0,0,960,940);
+  g.fillStyle='#9fe8ff';g.textAlign='center';g.font='bold 210px sans-serif';g.fillText('22.5°',480,330);g.font='54px sans-serif';g.fillText('Consigna 21.0 · AUTO',480,430);g.fillText('Hum 45 % · VENT · 14:32',480,510);
+  g.strokeStyle='#2a4a7a';g.lineWidth=5;[[60,640],[290,640],[520,640],[750,640]].forEach(([x,y])=>g.strokeRect(x,y,150,150));g.font='bold 70px sans-serif';
+  [['−',135],['+',365],['❄',595],['☀',825]].forEach(([t,x])=>g.fillText(t,x,742));return new THREE.CanvasTexture(c);}
+box(Q.disp_w,Q.disp_h,Q.disp_t,M(0x111111),0,0,Q.disp_back+Q.disp_t/2,gDisp);
+{ const scr=new THREE.Mesh(new THREE.PlaneGeometry(Q.act_w,Q.act_h),new THREE.MeshBasicMaterial({map:uiTexture()})); scr.position.set(0,0,ZT+0.05); gDisp.add(scr); }
+/* ---------- visibilidad / despiece / cámara ---------- */
+const e=state.explode;
+gShell.visible=state.case!=='off'; gBack.visible=state.case!=='off';
+gDisp.position.z=e*45; gPCB.position.z=-e*20; gBack.position.z=-e*55;
+const mz=ZT/2;
+const views={ iso:[150,120,230], front:[0,0,380], side:[380,0,mz], back:[-150,110,-230] };
+function setView(v){const a=views[v]||views.iso; const k=e?1.5:1;
+  camera.position.set(a[0]*k,a[1]*k,mz+(a[2]-mz)*k); camera.up.set(0,1,0); controls.target.set(0,0,mz); controls.update();}
+function loop(){requestAnimationFrame(loop);renderer.render(scene,camera);}
+addEventListener('resize',()=>{renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();});
+setView(state.view); renderer.render(scene,camera); loop();
+function snap(){ if(q.get('snap')!=='1') return; let im=document.getElementById('snapimg');
+  if(!im){ im=new Image(); im.id='snapimg'; im.style.cssText='position:fixed;inset:0;width:100%;height:100%'; document.body.appendChild(im); }
+  im.src=renderer.domElement.toDataURL('image/png'); }
+{ const img=document.getElementById('pcbimg');
+  const ready=()=>{ window.pcbTex.needsUpdate=true; renderer.render(scene,camera); snap(); };
+  if(img.complete && img.naturalWidth) ready(); else img.addEventListener('load',ready); }
+snap();
+function applyColor(c){ shMat.color.set(c); if(typeof lidMat!=='undefined') lidMat.color.set(c); }
+function apply(next){location.hash=new URLSearchParams({case:state.case,view:state.view,explode:state.explode,color:curColor.slice(1),...next}).toString();location.reload();}
+if(state.ui){const ui=document.getElementById('ui');
+  const btn=(l,on,f)=>{const b=document.createElement('button');b.textContent=l;if(on)b.className='on';b.onclick=f;ui.appendChild(b);};
+  btn('Con carcasa',state.case==='solid',()=>apply({case:'solid'})); btn('Carcasa transparente',glass,()=>apply({case:'glass'})); btn('Sin carcasa',state.case==='off',()=>apply({case:'off'}));
+  btn('Despiece',e>0,()=>apply({explode:e>0?0:1}));
+  ['iso','front','side','back'].forEach(v=>btn({iso:'Isométrica',front:'Frontal',side:'Lateral',back:'Trasera'}[v],state.view===v,()=>apply({view:v})));
+  { const box=document.createElement('div'); box.style.cssText='display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #9aa;border-radius:6px;padding:4px 10px;font-size:13px';
+    const inp=document.createElement('input'); inp.type='color'; inp.title='Color de la carcasa';
+    const sl=['R','G','B'].map(n=>{const r=document.createElement('input'); r.type='range'; r.min=0; r.max=255; r.style.width='64px'; r.title=n; return r;});
+    const hex=(r,g,b)=>'#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
+    function setCol(c){ curColor=c; applyColor(c); inp.value=c; const n=parseInt(c.slice(1),16); sl[0].value=(n>>16)&255; sl[1].value=(n>>8)&255; sl[2].value=n&255;
+      try{ history.replaceState(null,'','#'+new URLSearchParams({case:state.case,view:state.view,explode:state.explode,color:c.slice(1)}).toString()); }catch(e){} }
+    inp.oninput=()=>setCol(inp.value); sl.forEach(r=>r.oninput=()=>setCol(hex(+sl[0].value,+sl[1].value,+sl[2].value)));
+    box.append('Color carcasa ',inp,' R',sl[0],' G',sl[1],' B',sl[2]); ui.appendChild(box); setCol(curColor); }
+}
+document.getElementById('info').innerHTML=`<b>${Q.outer.toFixed(1)}×${Q.outer.toFixed(1)}×${Q.depth.toFixed(2)} mm</b> · PCB Rev B 84×84 con 3 relés HF115F · DWIN 4" 480×480 enrasada<br>Componentes hacia atrás (vista «Trasera» + «Sin carcasa») · tabique 230 V/SELV en rojo · cápsula DHT22 bajo la pared inferior<br>Interferencias: ${SCENE.problems.length? SCENE.problems.join('; ') : 'ninguna'} · PRELIMINAR: confirmar plano de DWIN`;
+if(!state.ui) document.getElementById('info').style.display='none';
+</script>
+</body>
+</html>
