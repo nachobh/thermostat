@@ -2,6 +2,12 @@
 
 El firmware (`thermostat_rev_b.ino`) habla con la pantalla por UART a **115 200 baudios
 8N1** (`DWIN_BAUD`; si se cambia en `T5L_CFG.CFG`, compilar con `-DDWIN_BAUD=…`).
+
+Para configurar Wi-Fi en Rev C, copiar `Secrets.h.example` a `Secrets.h` en
+esta misma carpeta, editar SSID/contraseña localmente y volver a compilar y
+grabar el NodeMCU. No enviar el archivo `Secrets.h` a Git ni por chat. El
+servidor HTTP del firmware no tiene autenticación: usar únicamente una red
+local de confianza, sin redirección de puertos desde Internet.
 Conexión J2: 1 = +5 V, 2 = GND, 3 = TX de la pantalla, 4 = RX de la pantalla.
 **Solo variantes con UART TTL de 3,3 V**: una salida RS232 (± 12 V) destruiría GPIO0/GPIO2.
 

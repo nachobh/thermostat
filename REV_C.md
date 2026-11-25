@@ -59,6 +59,12 @@ de la última sección. La Rev B (`REV_B.md`) se conserva tal cual como alternat
 
 ## Firmware
 
+Actualización 2026-11-25: un NodeMCU ESP8266EX ha sido programado por USB con
+el firmware Rev C por defecto; flash verificada y ejecución confirmada por
+monitor serie a 115200. Sin SHT40 conectado informa de fallo de lectura, como
+se esperaba. No se ha probado aún en la PCB ni con cargas. La compilación no
+incluye credenciales Wi-Fi, por lo que OTA queda pendiente.
+
 Compila (2026-10-21, core ESP8266 3.1.2) en dos variantes:
 - **Por defecto, SHT40** (Adafruit SHT4x 1.0.5): I²C en D1/D2, dirección 0x44, alta precisión y sin calentador. Si no responde, lo reintenta y, sin lectura válida durante 1 minuto, apaga todo.
 - **`-DUSE_DHT22=1`:** DHT22 en D5, para la Rev B.
